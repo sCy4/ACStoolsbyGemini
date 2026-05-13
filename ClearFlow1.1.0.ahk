@@ -14,7 +14,7 @@ DllCall("shell32\SHChangeNotify", "UInt", 0x00002000, "UInt", 0x0005, "Str", A_S
 ; ==============================================================================
 global APP_CFG := {
     ; --- 版本與更新設定 ---
-    Version: "v1.0.9", 
+    Version: "v1.1.0", 
     GithubRepo: "sCy4/ACStoolsbyGemini",  ; ★ 發布前請務必更改為你的 GitHub 帳號/儲存庫名稱
 
     ; --- 系統檔案與網址 ---
