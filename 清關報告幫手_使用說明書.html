@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>清關報告幫手 使用說明書</title>
+<style>
+  /* ─────────── 列印設定 ─────────── */
+  @page {
+    size: A4;
+    margin: 18mm 16mm;
+  }
+
+  /* ─────────── 色彩變數（Claude 經典淺色） ─────────── */
+  :root {
+    --bg:           #FAF9F5;  /* 主背景：奶油白 */
+    --bg-soft:      #F2EFE6;  /* 次背景：淺米 */
+    --bg-card:      #FFFFFF;  /* 卡片背景 */
+    --text:         #1C1917;  /* 主文字：暖黑 */
+    --text-muted:   #78716C;  /* 次文字：暖灰 */
+    --text-soft:    #57534E;  /* 中性文字 */
+    --accent:       #CF6A4C;  /* Claude 珊瑚橘 */
+    --accent-soft:  #F4E1D6;  /* 淺珊瑚 */
+    --accent-deep:  #A8543B;  /* 深珊瑚 */
+    --border:       #E7E2D6;  /* 邊框暖灰 */
+    --border-soft:  #EFEBE0;  /* 淺邊框 */
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", -apple-system, "Segoe UI", "PingFang TC",
+                 "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+    font-size: 10pt;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 30px 36px 60px;
+  }
+
+  @media print {
+    body { padding: 0; max-width: none; }
+  }
+
+  /* ─────────── 標題區 ─────────── */
+  .cover {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 22px;
+    margin-bottom: 32px;
+  }
+  .cover h1 {
+    font-size: 26pt;
+    font-weight: 600;
+    margin: 0 0 6px 0;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+  .cover .tagline {
+    font-size: 11pt;
+    color: var(--text-muted);
+    margin: 0 0 16px 0;
+  }
+  .cover .meta {
+    display: flex;
+    gap: 22px;
+    flex-wrap: wrap;
+    font-size: 8.8pt;
+    color: var(--text-soft);
+  }
+  .cover .meta b {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  /* ─────────── 章節標題 ─────────── */
+  section {
+    margin-top: 32px;
+  }
+  /* 只保護章節「標題不孤立在頁尾」 */
+  section > h2 {
+    break-after: avoid;
+  }
+  section > h2 {
+    font-size: 16pt;
+    font-weight: 600;
+    margin: 0 0 14px 0;
+    color: var(--text);
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+  section > h2 .num {
+    font-size: 11pt;
+    font-weight: 500;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 2px 10px;
+    border-radius: 12px;
+    letter-spacing: 0.5px;
+  }
+
+  h3 {
+    font-size: 11pt;
+    font-weight: 600;
+    margin: 18px 0 6px 0;
+    color: var(--text);
+  }
+
+  p { margin: 6px 0; }
+  p.lead {
+    font-size: 11pt;
+    color: var(--text-soft);
+    line-height: 1.7;
+  }
+
+  /* ─────────── 強調與細節 ─────────── */
+  b, strong { font-weight: 600; color: var(--text); }
+  .muted { color: var(--text-muted); }
+  .accent { color: var(--accent); }
+
+  .code {
+    background: var(--bg-soft);
+    border: 1px solid var(--border-soft);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: "JetBrains Mono", "Consolas", "Menlo", monospace;
+    font-size: 8.8pt;
+    color: var(--accent-deep);
+  }
+
+  /* ─────────── 功能卡片 ─────────── */
+  .func-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin: 14px 0;
+    break-inside: avoid;
+  }
+  .func-card .head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 4px;
+  }
+  .func-card .icon {
+    width: 30px;
+    height: 30px;
+    background: var(--accent-soft);
+    color: var(--accent-deep);
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14pt;
+    flex-shrink: 0;
+  }
+  .func-card .name {
+    font-size: 12pt;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .func-card .use-case {
+    font-size: 9pt;
+    color: var(--text-muted);
+    margin: 4px 0 10px 0;
+    font-style: italic;
+  }
+  .func-card .steps {
+    margin: 8px 0 0 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: step;
+  }
+  .func-card .steps li {
+    counter-increment: step;
+    position: relative;
+    padding-left: 26px;
+    margin-bottom: 4px;
+    line-height: 1.55;
+  }
+  .func-card .steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: 2px;
+    width: 18px;
+    height: 18px;
+    background: var(--bg-soft);
+    color: var(--accent-deep);
+    border-radius: 50%;
+    font-size: 8pt;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ─────────── 提示框 ─────────── */
+  .note {
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    padding: 8px 14px;
+    margin: 10px 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 9pt;
+    color: var(--text-soft);
+  }
+  .note b { color: var(--accent-deep); }
+
+  /* ─────────── 表格 ─────────── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 9pt;
+    background: var(--bg-card);
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  thead th {
+    background: var(--bg-soft);
+    color: var(--text);
+    font-weight: 600;
+    text-align: left;
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  tbody td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border-soft);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:nth-child(even) { background: var(--bg); }
+  td.key {
+    font-weight: 600;
+    color: var(--accent-deep);
+    white-space: nowrap;
+  }
+
+  /* ─────────── FAQ 樣式 ─────────── */
+  .faq {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px 24px;
+    margin-top: 10px;
+  }
+  .faq-item {
+    break-inside: avoid;
+  }
+  .faq-q {
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 3px;
+    font-size: 9.8pt;
+  }
+  .faq-q::before {
+    content: "Q";
+    display: inline-block;
+    color: var(--accent);
+    font-weight: 700;
+    margin-right: 6px;
+  }
+  .faq-a {
+    font-size: 9pt;
+    color: var(--text-soft);
+    line-height: 1.6;
+    padding-left: 18px;
+  }
+
+  /* ─────────── 安裝步驟 ─────────── */
+  .install-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-top: 10px;
+  }
+  .install-block {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 18px;
+  }
+  .install-block h3 {
+    margin-top: 0;
+    color: var(--accent-deep);
+  }
+  .install-block ul, .install-block ol {
+    margin: 0;
+    padding-left: 18px;
+  }
+  .install-block li { margin-bottom: 4px; }
+
+  /* ─────────── 支援頁 ─────────── */
+  .support-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .support-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+  }
+  .support-card h3 { margin-top: 0; }
+  .support-card .info-row {
+    display: flex;
+    padding: 4px 0;
+    font-size: 9pt;
+    border-bottom: 1px dashed var(--border-soft);
+  }
+  .support-card .info-row:last-child { border-bottom: none; }
+  .support-card .info-row .label {
+    color: var(--text-muted);
+    width: 70px;
+    flex-shrink: 0;
+  }
+  .support-card .info-row .value {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  /* ─────────── 頁尾 ─────────── */
+  .footer {
+    margin-top: 50px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    font-size: 8pt;
+    color: var(--text-muted);
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════ 封面區 ════════════════ -->
+<div class="cover">
+  <h1>清關報告幫手</h1>
+  <p class="tagline">自動化清關查單與回填工具 — 使用說明書</p>
+  <div class="meta">
+    <span><b>版本</b>　v1.1.0</span>
+    <span><b>作者</b>　蘇宗彥（ACS 台北站）</span>
+    <span><b>適用對象</b>　ACS 清關作業人員</span>
+  </div>
+</div>
+
+
+<!-- ════════════════ 1. 這是做什麼的？ ════════════════ -->
+<section>
+  <h2><span class="num">01</span>這是做什麼的？</h2>
+  <p class="lead">
+    一個跑在背景的 Windows 小工具，幫你自動處理清關報告中重複又繁瑣的查單動作。
+    在報告中<b>選取單號 → 長按右鍵 → 選功能</b>，工具會自動切到物流系統查詢、抓取狀態，再透過雲端寫回清關報告。
+  </p>
+
+  <h3>它能解決什麼？</h3>
+  <table>
+    <thead>
+      <tr><th style="width:50%">以前</th><th>現在</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>一筆一筆複製單號、貼到物流系統、查 EZWAY 狀態、回到報告手動填上「資料相符」「Y/N」與分配人員⋯⋯</td>
+        <td>選取整欄單號 → 長按右鍵選功能 → 倒杯水回來，看統計報告。</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="note">
+    <b>核心理念　</b>不打擾你平常使用 Chrome：短按右鍵 = 正常右鍵；長按右鍵 = 工具選單。
+  </div>
+</section>
+
+
+<!-- ════════════════ 2. 四種功能 ════════════════ -->
+<section>
+  <h2><span class="num">02</span>四種功能（使用方式及情境）</h2>
+
+  <div class="func-card">
+    <div class="head">
+      <div class="icon">🔍</div>
+      <div class="name">查詢單筆</div>
+    </div>
+    <div class="use-case">情境：客服臨時被問「這筆單現在狀態？」、想快速確認一張單的明細。</div>
+    <ol class="steps">
+      <li>在任何地方選取一個單號文字（可以是清關報告、聊天訊息、Excel⋯⋯）</li>
+      <li>在 Chrome 中<b>長按右鍵</b>，選擇「<b>查詢單筆</b>」</li>
+      <li>工具自動切到「物流管理系統」並把該單號查出來，完成後游標恢復正常</li>
+    </ol>
+  </div>
+
+  <div class="func-card">
+    <div class="head">
+      <div class="icon">🔄</div>
+      <div class="name">更新申報狀態</div>
+    </div>
+    <div class="use-case">情境：每日例行清關報告維護 — 批次查多筆單號的 EZWAY 狀態並自動回填。</div>
+    <ol class="steps">
+      <li>在「清關報告」中選取一整欄的單號（可選 5 筆、50 筆、500 筆）</li>
+      <li><b>長按右鍵</b>，選擇「<b>更新申報狀態</b>」</li>
+      <li>畫面上方顯示進度（例：<span class="code">▶️ 腳本運作中 [進度 3 / 50]</span>）</li>
+      <li>跑完後自動切到「清關報告」分頁，透過雲端寫回「資料相符」「有效」</li>
+      <li>完成後彈出統計報告（總執行 / 已相符 / 已上傳 / 其他 / 狀態更改數）</li>
+    </ol>
+    <div class="note"><b>注意　</b>寫回階段會顯示「⏳ 修改表單資料中」，此時可以做別的事，但<b>不要關掉 Chrome</b>。</div>
+  </div>
+
+  <div class="func-card">
+    <div class="head">
+      <div class="icon">👥</div>
+      <div class="name">標記 Y/N 與分配人員</div>
+    </div>
+    <div class="use-case">情境：需要把當天未相符的單號分派給組員追蹤處理。</div>
+    <ol class="steps">
+      <li>點選功能後跳出輸入視窗，自動帶入上次或預設名單（萍, 富, 蓁, 姿, 彥, 潔）</li>
+      <li>修改名單後按 OK（會自動記住，存到 <span class="code">腳本設定檔-清關名單預設分配人員.txt</span>）</li>
+      <li>只想標 Y/N 不分配人員 → 把名字全部清空再按 OK</li>
+      <li>後續流程與「更新申報狀態」相同，雲端會額外寫入 Y/N 與分配人員欄</li>
+    </ol>
+    <div class="note">
+      <b>分配邏輯　</b>名單為「萍, 富, 蓁」，這次有 7 筆需要分配 → 萍、富、蓁、萍、富、蓁、萍（輪流；已相符的單不分配）。
+    </div>
+  </div>
+
+  <div class="func-card">
+    <div class="head">
+      <div class="icon">⚡</div>
+      <div class="name">標記重複資料</div>
+    </div>
+    <div class="use-case">情境：報告中可能有重複單號，需要一鍵把它們標色顯示。</div>
+    <ol class="steps">
+      <li>切到「清關報告」分頁</li>
+      <li><b>長按右鍵</b>，選擇「<b>標記重複資料</b>」</li>
+      <li>工具會送出 <span class="code">Ctrl + Alt + Shift + 1</span>，觸發試算表內預先綁定的巨集</li>
+    </ol>
+    <div class="note">
+      <b>前提條件　</b>試算表必須先綁定對應巨集到 <span class="code">Ctrl + Alt + Shift + 1</span>。此功能只能在 Chrome 視窗中使用。
+    </div>
+  </div>
+
+  <h3>運作中可以用的按鍵</h3>
+  <table>
+    <thead>
+      <tr><th style="width:32%">按鍵</th><th>動作</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="key">長按右鍵（&gt; 0.3 秒）</td><td>開啟工具選單（短按 = 正常右鍵，不會誤觸）</td></tr>
+      <tr><td class="key">Esc</td><td>暫停 / 恢復 — 做完事回到原畫面再按 Esc 繼續</td></tr>
+      <tr><td class="key">F8</td><td>結束工具（畫面出現「再見」後 2 秒關閉）</td></tr>
+    </tbody>
+  </table>
+</section>
+
+
+<!-- ════════════════ 3. 如何安裝？ ════════════════ -->
+<section>
+  <h2><span class="num">03</span>如何安裝？</h2>
+
+  <div class="install-grid">
+    <div class="install-block">
+      <h3>環境需求</h3>
+      <ul>
+        <li>Windows 10 或 11</li>
+        <li>Google Chrome（已登入物流系統）</li>
+        <li>網路連線（雲端寫入與自動更新用）</li>
+        <li>必須開好兩個分頁：
+          <br>① <b>物流管理系統</b>
+          <br>② <b>清關報告</b></li>
+      </ul>
+    </div>
+    <div class="install-block">
+      <h3>安裝步驟</h3>
+      <ol>
+        <li>取得 <span class="code">清關報告幫手.exe</span>，放在固定資料夾，例如 <span class="code">D:\工具\</span></li>
+        <li>雙擊執行檔，畫面右上出現「✅ 腳本已啟動」即代表運作中</li>
+        <li>確認 Chrome 已開好兩個分頁並完成登入</li>
+        <li>在 Chrome 中長按右鍵 → 出現工具選單即安裝成功</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>提醒　</b>分頁標題必須包含「<b>物流管理系統</b>」與「<b>清關報告</b>」這兩個關鍵字，工具才找得到。
+    工具不會幫你登入，請事先登好。<b>自動更新</b>已內建：啟動後 5 秒會背景檢查 GitHub，有新版下次重啟自動套用，全程無感。
+  </div>
+</section>
+
+
+<!-- ════════════════ 4. 錯誤訊息對照表 ════════════════ -->
+<section>
+  <h2><span class="num">04</span>錯誤訊息對照表</h2>
+  <p>看到錯誤對話框時，對照此表找原因與解法：</p>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:38%">錯誤訊息</th>
+        <th style="width:30%">原因</th>
+        <th>解決方式</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>沒有偵測到你要執行的單號</td><td>沒有先選取單號就執行</td><td>先反白選取單號文字再按右鍵</td></tr>
+      <tr><td>找不到「物流管理系統」的網頁</td><td>Chrome 沒開或沒登入</td><td>打開分頁並登入</td></tr>
+      <tr><td>「物流管理系統」網頁異常</td><td>物流系統頁面結構異動</td><td>重新整理頁面，再不行請聯絡作者</td></tr>
+      <tr><td>清關報告內沒有找到你所執行的單號</td><td>你選的單號不在清關報告中</td><td>確認單號是否真的在報告內</td></tr>
+      <tr><td>清關報告的雲端指令碼沒有回應</td><td>雲端伺服器異常或網路斷線</td><td>等 30 秒重試；持續失敗請聯絡作者</td></tr>
+      <tr><td>這個功能只可以在清關報告中使用</td><td>在非 Chrome 視窗按了「標記重複資料」</td><td>切回 Chrome 再執行</td></tr>
+      <tr><td>單號好像不對（需要 &gt; 3 字元）</td><td>選取內容全是太短的單號</td><td>重新選取正確單號</td></tr>
+      <tr><td>這超過了腳本能力範圍</td><td>發生未預期錯誤</td><td>重試一次；持續失敗請附畫面截圖聯絡作者</td></tr>
+    </tbody>
+  </table>
+</section>
+
+
+<!-- ════════════════ 5. 常見問題 ════════════════ -->
+<section>
+  <h2><span class="num">05</span>常見問題</h2>
+
+  <div class="faq">
+    <div class="faq-item">
+      <div class="faq-q">右鍵按了沒反應？</div>
+      <div class="faq-a">你可能是「快點」了，請改成<b>按住右鍵 0.3 秒以上</b>。這個設計是為了不干擾你正常使用 Chrome。</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">可以同時開好幾個 Chrome 視窗嗎？</div>
+      <div class="faq-a">可以，工具會自動掃描所有 Chrome 視窗，找到含有對應分頁的那一個。</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">執行到一半可以做別的事嗎？</div>
+      <div class="faq-a"><b>沙漏游標時</b>不行（滑鼠被鎖）；<b>正常游標時</b>可以；<b>想中途切換</b>請按 Esc 暫停。</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">剪貼簿原本的內容會不見嗎？</div>
+      <div class="faq-a">不會，工具會自動備份你的剪貼簿，執行完還原回去。</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">分配人員設定要去哪裡改？</div>
+      <div class="faq-a">① 下次執行功能時在輸入框內直接修改（自動記憶）。② 直接編輯 <span class="code">腳本設定檔-清關名單預設分配人員.txt</span>。</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">100 筆要跑多久？</div>
+      <div class="faq-a">每筆約 3–8 秒，100 筆約 5–10 分鐘。中途可隨時 Esc 暫停。</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">跑到一半單筆查詢失敗？</div>
+      <div class="faq-a">工具會自動把該筆標為「失敗」，繼續處理下一筆，<b>不會中斷整批流程</b>。</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">要關閉工具怎麼做？</div>
+      <div class="faq-a">按 <b>F8</b>，畫面出現「再見」後 2 秒自動關閉。</div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════ 6. 聯絡與支援 ════════════════ -->
+<section>
+  <h2><span class="num">06</span>聯絡與支援</h2>
+
+  <div class="support-grid">
+    <div class="support-card">
+      <h3>作者資訊</h3>
+      <div class="info-row">
+        <span class="label">作者</span>
+        <span class="value">蘇宗彥</span>
+      </div>
+      <div class="info-row">
+        <span class="label">單位</span>
+        <span class="value">ACS 台北站</span>
+      </div>
+      <div class="info-row">
+        <span class="label">工具版本</span>
+        <span class="value">v1.1.0</span>
+      </div>
+    </div>
+
+    <div class="support-card">
+      <h3>回報問題時請附上</h3>
+      <div class="info-row">
+        <span class="label">①</span>
+        <span class="value">操作步驟（你做了什麼）</span>
+      </div>
+      <div class="info-row">
+        <span class="label">②</span>
+        <span class="value">錯誤訊息截圖</span>
+      </div>
+      <div class="info-row">
+        <span class="label">③</span>
+        <span class="value">工具版本（顯示在啟動提示中）</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>查看版本　</b>每次啟動工具時，畫面右上會顯示版本號（例：「✅ 腳本已啟動 v1.1.0」）。
+    若需聯絡作者，附上版本號可加速排查。
+  </div>
+</section>
+
+
+<div class="footer">
+  文件版本 v1.0　·　對應工具版本 v1.1.0　·　© 蘇宗彥 ACS 台北站
+</div>
+
+</body>
+</html>
