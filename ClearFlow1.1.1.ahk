@@ -101,23 +101,42 @@ ApplyRoundedCorners(hwnd, radius) {
 ; ★ 啟動攔截：檢查是否有待命的更新檔 (第一時間無痕替換)
 ; ==============================================================================
 ApplyStagedUpdate() {
-    ; ★ 修正：如果目前是 .ahk 原始碼執行狀態，則不執行覆蓋更新，避免檔案損毀與干擾開發
     if !A_IsCompiled
         return
 
-    tempExePath := A_Temp "\Update_Temp.exe"
     fullCurrentPath := A_ScriptFullPath
+    targetUpdateFile := ""
+    targetVersion := ""
 
-    if !FileExist(tempExePath)
+    ; 尋找暫存資料夾內的更新檔
+    Loop Files, A_Temp "\Update_Temp_*.exe" {
+        targetUpdateFile := A_LoopFilePath
+        ; 從檔名提取版本號 (例如 Update_Temp_v1.1.0.exe -> v1.1.0)
+        if RegExMatch(A_LoopFileName, "Update_Temp_(v[\d\.]+)\.exe", &match)
+            targetVersion := match[1]
+        break
+    }
+
+    if (targetUpdateFile = "")
         return
 
-    ; 直接執行更新
-    ShowOSD("🔄 偵測到新版本，正在自動更新...")
+    ; ★ 終極防護：檢查暫存檔的版本是否「真的」比現在新
+    cleanTarget := StrReplace(targetVersion, "v", "")
+    cleanCurrent := StrReplace(APP_CFG.Version, "v", "")
+
+    if (VerCompare(cleanTarget, cleanCurrent) <= 0) {
+        ; 如果暫存檔版本比較舊或一樣 (幽靈殘留檔)，直接刪除它並中止更新
+        try FileDelete(targetUpdateFile)
+        return
+    }
+
+    ; 確認無誤，執行更新
+    ShowOSD("🔄 偵測到新版本 (" targetVersion ")，正在自動更新...")
     Sleep(2000)
 
     psCommand := "Start-Sleep -Seconds 4; "
                . "Remove-Item -Path '" fullCurrentPath "' -Force; "
-               . "Move-Item -Path '" tempExePath "' -Destination '" fullCurrentPath "' -Force; "
+               . "Move-Item -Path '" targetUpdateFile "' -Destination '" fullCurrentPath "' -Force; "
                . "Start-Process -FilePath '" fullCurrentPath "'"
     
     Run("powershell.exe -WindowStyle Hidden -Command `"" psCommand "`"", A_ScriptDir, "Hide")
@@ -444,7 +463,6 @@ EscapeRegex(s) {
 }
 
 CheckAndUpdateInBackground() {
-    ; ★ 修正：如果目前是 .ahk 原始碼執行狀態，則不進行背景下載
     if !A_IsCompiled
         return
 
@@ -459,18 +477,19 @@ CheckAndUpdateInBackground() {
                 if RegExMatch(whr.ResponseText, '"tag_name":\s*"([^"]+)"', &matchTag) {
                     latestVersion := matchTag[1]
                     
-                    ; ★ 修正：過濾掉 "v" 字首，並使用 VerCompare 判斷遠端版本是否「大於」本地版本
                     cleanLatest := StrReplace(latestVersion, "v", "")
                     cleanCurrent := StrReplace(APP_CFG.Version, "v", "")
                     
+                    ; 只有遠端大於目前版本才下載
                     if (VerCompare(cleanLatest, cleanCurrent) > 0) {
                         if RegExMatch(whr.ResponseText, '"browser_download_url":\s*"([^"]+\.exe)"', &matchUrl) {
                             downloadUrl := matchUrl[1]
-                            tempExePath := A_Temp "\Update_Temp.exe"
+                            ; ★ 將版本號加入暫存檔名中
+                            tempExePath := A_Temp "\Update_Temp_" latestVersion ".exe"
                             
-                            ; 先刪除舊的半成品，確保下載乾淨
-                            if FileExist(tempExePath)
-                                try FileDelete(tempExePath)
+                            ; 先清空以前遺留的其他版本暫存檔
+                            Loop Files, A_Temp "\Update_Temp_*.exe"
+                                try FileDelete(A_LoopFilePath)
                             
                             psCmd := "Invoke-WebRequest -Uri '" downloadUrl "' -OutFile '" tempExePath "' -UseBasicParsing"
                             Run("powershell.exe -WindowStyle Hidden -Command `"" psCmd "`"", , "Hide")
