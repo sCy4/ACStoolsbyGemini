@@ -14,7 +14,7 @@ DllCall("shell32\SHChangeNotify", "UInt", 0x00002000, "UInt", 0x0005, "Str", A_S
 ; ==============================================================================
 global APP_CFG := {
     ; --- 版本與更新設定 ---
-    Version: "v1.1.1", 
+    Version: "v1.1.2",
     GithubRepo: "sCy4/ACStoolsbyGemini",  ; ★ 發布前請務必更改為你的 GitHub 帳號/儲存庫名稱
 
     ; --- 系統檔案與網址 ---
@@ -101,13 +101,17 @@ ApplyRoundedCorners(hwnd, radius) {
 ; ★ 啟動攔截：檢查是否有待命的更新檔 (第一時間無痕替換)
 ; ==============================================================================
 ApplyStagedUpdate() {
+    ; ★ 修正：如果目前是 .ahk 原始碼執行狀態，則不執行覆蓋更新，避免檔案損毀與干擾開發
+    if !A_IsCompiled
+        return
+
     tempExePath := A_Temp "\Update_Temp.exe"
     fullCurrentPath := A_ScriptFullPath
 
     if !FileExist(tempExePath)
         return
 
-    ; 直接執行更新：背景檢查機制已經確認過版本不同才下載，所以若暫存檔存在即代表需更新
+    ; 直接執行更新
     ShowOSD("🔄 偵測到新版本，正在自動更新...")
     Sleep(2000)
 
@@ -440,18 +444,26 @@ EscapeRegex(s) {
 }
 
 CheckAndUpdateInBackground() {
+    ; ★ 修正：如果目前是 .ahk 原始碼執行狀態，則不進行背景下載
+    if !A_IsCompiled
+        return
+
     try {
         whr := ComObject("WinHttp.WinHttpRequest.5.1")
         whr.Open("GET", "https://api.github.com/repos/" APP_CFG.GithubRepo "/releases/latest", true)
         whr.SetRequestHeader("User-Agent", "ACStools-AutoUpdater")
         whr.Send()
         
-        ; 將等待 API 的時間縮短為 2 秒，避免網路不穩時卡頓太久
         if (whr.WaitForResponse(2)) {
             if (whr.Status == 200) {
                 if RegExMatch(whr.ResponseText, '"tag_name":\s*"([^"]+)"', &matchTag) {
                     latestVersion := matchTag[1]
-                    if (latestVersion != APP_CFG.Version) {
+                    
+                    ; ★ 修正：過濾掉 "v" 字首，並使用 VerCompare 判斷遠端版本是否「大於」本地版本
+                    cleanLatest := StrReplace(latestVersion, "v", "")
+                    cleanCurrent := StrReplace(APP_CFG.Version, "v", "")
+                    
+                    if (VerCompare(cleanLatest, cleanCurrent) > 0) {
                         if RegExMatch(whr.ResponseText, '"browser_download_url":\s*"([^"]+\.exe)"', &matchUrl) {
                             downloadUrl := matchUrl[1]
                             tempExePath := A_Temp "\Update_Temp.exe"
@@ -460,8 +472,6 @@ CheckAndUpdateInBackground() {
                             if FileExist(tempExePath)
                                 try FileDelete(tempExePath)
                             
-                            ; ★ 核心解法：利用 PowerShell 在背景獨立下載，釋放 AHK 主執行緒
-                            ; 加入 -UseBasicParsing 可以大幅加快 PowerShell 下載啟動的速度
                             psCmd := "Invoke-WebRequest -Uri '" downloadUrl "' -OutFile '" tempExePath "' -UseBasicParsing"
                             Run("powershell.exe -WindowStyle Hidden -Command `"" psCmd "`"", , "Hide")
                         }
