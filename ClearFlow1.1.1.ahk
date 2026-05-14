@@ -27,14 +27,14 @@ global APP_CFG := {
     Tab_Report: "清關報告",
     
     ; --- 提示訊息與對話框 (錯誤) ---
-    Err_NoSelect: "■ 錯誤：沒有偵測到你要執行的單號，請確認有選取單號",
-    Err_NoPage: "■ 錯誤：找不到「物流管理系統」的網頁，請確認有開啟且已登入",
+    Err_NoSelect: "■ 錯誤：沒有偵測到你要執行的單號",
+    Err_NoPage: "■ 錯誤：找不到「物流管理系統」網頁",
     Err_NoSearch: "■ 錯誤：「物流管理系統」網頁異常",
-    Err_CloudWrite: "■ 錯誤：清關報告內沒有找到你所執行的單號，請確認清單報告內資料存在且無誤",
-    Err_CloudConn: "■ 錯誤：清關報告的雲端指令碼沒有回應，請再嘗試一次，如果還是錯誤，請詢問腳本作者：蘇宗彥 - ACS台北站",
-    Err_Script: "■ 錯誤：這超過了腳本能力範圍，請再嘗試執行一次，如果還是錯誤，請詢問腳本作者：蘇宗彥 - ACS台北站",
+    Err_CloudWrite: "■ 錯誤：清關報告內沒有看到你所執行的單號",
+    Err_CloudConn: "■ 錯誤：清關報告的雲端指令碼沒有回應",
+    Err_Script: "■ 錯誤：這可能超過了腳本的能力範圍",
     Err_WrongWindow: "■ 錯誤：這個功能只可以在清關報告中使用",
-    Err_NoValidCode: "■ 錯誤：單號好像不對 (單號需要 > 3 字元)",
+    Err_NoValidCode: "■ 錯誤：單號好像不對",
     
     ; --- 提示訊息與對話框 (狀態與 OSD) ---
     Osd_Running: "▶️ 腳本運作中：你現在不能操作電腦`n[進度 {1} / {2}]  (暫停：Esc)  (結束：F8)",
@@ -632,7 +632,7 @@ Customs_StandaloneRButton(*) {
 
 Customs_StandaloneF8(*) {
     RestoreCursor()
-    ShowOSD("再見")
+    ShowOSD("下次見")
     SetTimer(() => ExitApp(), -2000)
 }
 
