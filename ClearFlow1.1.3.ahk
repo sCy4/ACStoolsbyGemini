@@ -14,7 +14,7 @@ DllCall("shell32\SHChangeNotify", "UInt", 0x00002000, "UInt", 0x0005, "Str", A_S
 ; ==============================================================================
 global APP_CFG := {
     ; --- 版本與更新設定 ---
-    Version: "v1.1.2",
+    Version: "v1.1.3",
     GithubRepo: "sCy4/ACStoolsbyGemini",  ; ★ 發布前請務必更改為你的 GitHub 帳號/儲存庫名稱
 
     ; --- 系統檔案與網址 ---
@@ -625,8 +625,10 @@ SendToGAS(dataList, totalCount, matchCount, validCount, noMatchCount) {
 ShowOSD("✅ 腳本已啟動 (版本：" APP_CFG.Version ")")
 SetTimer(HideOSD, -2000)
 
-; ★ 啟動後 5 秒，在背景靜默檢查更新並下載
+; ★ 啟動後 5 秒先在背景偷偷檢查第一次
 SetTimer(CheckAndUpdateInBackground, -5000)
+; ★ 之後每隔 1 小時 (3600000 毫秒) 背景自動循環檢查一次
+SetTimer(CheckAndUpdateInBackground, 3600000)
 
 SetTitleMatchMode 2
 
