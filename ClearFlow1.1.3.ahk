@@ -627,8 +627,8 @@ SetTimer(HideOSD, -2000)
 
 ; ★ 啟動後 5 秒先在背景偷偷檢查第一次
 SetTimer(CheckAndUpdateInBackground, -5000)
-; ★ 之後每隔 1 小時 (3600000 毫秒) 背景自動循環檢查一次
-SetTimer(CheckAndUpdateInBackground, 3600000)
+; ★ 之後每隔 1.5 小時 (5400000 毫秒) 背景自動循環檢查一次
+SetTimer(CheckAndUpdateInBackground, 5400000)
 
 SetTitleMatchMode 2
 
