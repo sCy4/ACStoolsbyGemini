@@ -2,7 +2,7 @@
 #Include %A_ScriptDir%\UIA.ahk
 
 ; ==============================================================================
-; ★ 變數初始化 (移至最上方以避免 #HotIf 找不到變數提早報錯)
+; 變數初始化 (移至最上方以避免 #HotIf 找不到變數提早報錯)
 ; ==============================================================================
 global isRunning := false
 global isMouseLocked := false
@@ -14,11 +14,13 @@ DllCall("shell32\SHChangeNotify", "UInt", 0x00002000, "UInt", 0x0005, "Str", A_S
 ; ==============================================================================
 global APP_CFG := {
     ; --- 版本與更新設定 ---
-    Version: "v1.1.3",
+    Version: "v1.1.4",
     GithubRepo: "sCy4/ACStoolsbyGemini",  ; ★ 發布前請務必更改為你的 GitHub 帳號/儲存庫名稱
 
     ; --- 系統檔案與網址 ---
-    ConfigFile: A_ScriptDir "\腳本設定檔-清關名單預設分配人員.txt",
+    ; 設定檔資料夾與檔名分開定義,未來要搬位置或改名只動一處
+    ConfigDir: A_AppData "\ACStools",
+    ConfigFileName: "腳本設定檔-清關名單預設分配人員.txt",
     DefaultAssignees: "萍, 富, 蓁, 姿, 彥, 潔",
     GasUrl: "https://script.google.com/macros/s/AKfycbw2D6js48bcpApc6VhBfksd-98TCjvXZTccShoFBegp2P03Wh4tw3E3ufNQLKg4EXqX/exec",
     
@@ -59,6 +61,9 @@ global APP_CFG := {
     ; --- 巨集快捷鍵設定 ---
     Key_HighlightMacro: "^+!1"  ; 代表 Ctrl + Alt + Shift + 1
 }
+
+; 便利常數:設定檔完整路徑 (寫一次,各處沿用)
+global CONFIG_FILE_PATH := APP_CFG.ConfigDir "\" APP_CFG.ConfigFileName
 
 ; ==============================================================================
 ; 2. OSD 設計
@@ -143,6 +148,9 @@ ApplyStagedUpdate() {
     ExitApp() 
 }
 ApplyStagedUpdate()
+
+; ★ 啟動時無痕搬移舊版本遺留在腳本資料夾的設定檔到 AppData
+MigrateOldConfigFile()
 
 ; ==============================================================================
 ; 3. 介面與選單建立
@@ -252,28 +260,31 @@ Action_EZWRenew(*) {
 }
 
 Action_EZWAllot(*) {
-    if !FileExist(APP_CFG.ConfigFile) {
-        try FileAppend(APP_CFG.DefaultAssignees, APP_CFG.ConfigFile, "UTF-8")
+    ; ★ 進入功能前先確保 AppData 設定資料夾存在
+    EnsureConfigDir()
+
+    if !FileExist(CONFIG_FILE_PATH) {
+        try FileAppend(APP_CFG.DefaultAssignees, CONFIG_FILE_PATH, "UTF-8")
         rawAssigneeText := APP_CFG.DefaultAssignees
     } else {
-        rawAssigneeText := FileRead(APP_CFG.ConfigFile, "UTF-8")
+        rawAssigneeText := FileRead(CONFIG_FILE_PATH, "UTF-8")
     }
 
-    cleanedFileText := Trim(RegExReplace(rawAssigneeText, "[,\r\n，、\s]+", ", "), " ,")
+    cleanedFileText := Trim(RegExReplace(rawAssigneeText, "[,\r\n,、\s]+", ", "), " ,")
     ib := InputBox(APP_CFG.Input_Body, APP_CFG.Input_Title, "w400 h160", cleanedFileText)
     if (ib.Result = "Cancel" || ib.Result = "Timeout")
         return 
 
     ; ★ 確認後將輸入值寫回設定檔,下次開啟 InputBox 自動帶入
     try {
-        cleanedInput := Trim(RegExReplace(ib.Value, "[，、\s]+", ", "), " ,")
-        if FileExist(APP_CFG.ConfigFile)
-            FileDelete(APP_CFG.ConfigFile)
-        FileAppend(cleanedInput, APP_CFG.ConfigFile, "UTF-8")
+        cleanedInput := Trim(RegExReplace(ib.Value, "[,、\s]+", ", "), " ,")
+        if FileExist(CONFIG_FILE_PATH)
+            FileDelete(CONFIG_FILE_PATH)
+        FileAppend(cleanedInput, CONFIG_FILE_PATH, "UTF-8")
     }
     
     assignees := []
-    for name in StrSplit(RegExReplace(ib.Value, "[，、\s]+", ","), ",")
+    for name in StrSplit(RegExReplace(ib.Value, "[,、\s]+", ","), ",")
         if (Trim(name) != "")
             assignees.Push(Trim(name))
 
@@ -445,6 +456,30 @@ ExecuteSearchCode(ChromeEl, trackCode) {
 ; 6. 系統操作與雲端連線輔助函式
 ; ==============================================================================
 
+; ★ 確保 AppData 設定資料夾存在,寫檔前必呼叫
+EnsureConfigDir() {
+    if !DirExist(APP_CFG.ConfigDir) {
+        try DirCreate(APP_CFG.ConfigDir)
+    }
+}
+
+; ★ 無痕搬移舊版本遺留在腳本資料夾的設定檔到 AppData,搬完即刪
+MigrateOldConfigFile() {
+    legacyPath := A_ScriptDir "\" APP_CFG.ConfigFileName
+    if !FileExist(legacyPath)
+        return
+    try {
+        EnsureConfigDir()
+        ; 若新位置還沒有設定檔,把舊內容搬過去保留使用者偏好
+        if !FileExist(CONFIG_FILE_PATH) {
+            content := FileRead(legacyPath, "UTF-8")
+            FileAppend(content, CONFIG_FILE_PATH, "UTF-8")
+        }
+        ; 不論如何都刪除舊檔,讓腳本資料夾保持乾淨
+        FileDelete(legacyPath)
+    }
+}
+
 ; ★ JSON 字串跳脫,避免 code/match/assignee 含特殊字元時 GAS 解析失敗
 JsonEscape(s) {
     s := StrReplace(s, "\", "\\")
@@ -527,16 +562,34 @@ RestoreCursor() {
     DllCall("SystemParametersInfo", "UInt", 0x0057, "UInt", 0, "Ptr", 0, "UInt", 0)
 }
 
+; ★ 游標鎖定保活:UIA / Chrome 互動時系統會反覆把 Wait 游標改回箭頭,
+;   用 100ms 的 Timer 持續壓制,肉眼就看不到閃爍。
+CursorLockKeepAlive() {
+    global isMouseLocked
+    if (isMouseLocked)
+        SetSystemCursor("Wait")
+}
+
+StartCursorLock() {
+    SetSystemCursor("Wait")
+    SetTimer(CursorLockKeepAlive, 100)
+}
+
+StopCursorLock() {
+    SetTimer(CursorLockKeepAlive, 0)
+    RestoreCursor()
+}
+
 LockSystem() {
     global isRunning := true
     global isMouseLocked := true 
-    SetSystemCursor("Wait")
+    StartCursorLock()
 }
 
 EndProcess() {
     global isRunning := false
     global isMouseLocked := false 
-    RestoreCursor()
+    StopCursorLock()
     HideOSD()
 }
 
@@ -561,7 +614,8 @@ GetSelectedText(&cleanText) {
 
 SendToGAS(dataList, totalCount, matchCount, validCount, noMatchCount) {
     ShowOSD(APP_CFG.Osd_Writing)
-    RestoreCursor()
+    ; ★ 雲端寫入階段不需要鎖游標,但仍標記 isRunning 讓 Esc 暫停邏輯正常
+    StopCursorLock()
     global isMouseLocked := false 
 
     ; ★ 沒有任何有效單號 → 顯示明確訊息,避免使用者面對「無聲結束」
@@ -632,10 +686,11 @@ SetTimer(CheckAndUpdateInBackground, 5400000)
 
 SetTitleMatchMode 2
 
-; ★ 統一退出清理:還原游標 + 釋放 GDI Brush
+; ★ 統一退出清理:停止游標 Timer + 還原游標 + 釋放 GDI Brush
 OnExit(CleanupOnExit)
 CleanupOnExit(*) {
     global hAccentBrush
+    SetTimer(CursorLockKeepAlive, 0)
     RestoreCursor()
     if (hAccentBrush) {
         try DllCall("gdi32\DeleteObject", "Ptr", hAccentBrush)
@@ -661,10 +716,9 @@ Customs_StandaloneRButton(*) {
     }
 }
 
+; ★ F8 緊急關停:直接呼叫 ExitApp,清理工作交給 CleanupOnExit 處理,確保零延遲
 Customs_StandaloneF8(*) {
-    RestoreCursor()
-    ShowOSD("下次見")
-    SetTimer(() => ExitApp(), -2000)
+    ExitApp()
 }
 
 Hotkey "$RButton", Customs_StandaloneRButton, "T2"
@@ -689,13 +743,13 @@ Esc:: {
     if paused {
         wasLocked := isMouseLocked
         global isMouseLocked := false
-        RestoreCursor()
+        StopCursorLock()
         ShowOSD(APP_CFG.Osd_Paused)
         Pause 1
     } else {
         global isMouseLocked := wasLocked
         if (isMouseLocked)
-            SetSystemCursor("Wait")
+            StartCursorLock()
             
         ShowOSD(APP_CFG.Osd_Resuming)
         Sleep 500
