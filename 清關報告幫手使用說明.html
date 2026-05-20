@@ -2,6 +2,8 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
+<!-- 🌟 新增：讓手機版排版正確的關鍵標籤 🌟 -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>清關報告幫手 使用說明書</title>
 <style>
   /* ─────────── 列印設定 ─────────── */
@@ -305,6 +307,21 @@
     justify-content: center;
   }
 
+  /* 🌟 新增：影片播放器容器樣式 🌟 */
+  .video-container {
+    margin-top: 18px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: #000;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+  .video-container video {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
   /* ─────────── 提示框 ─────────── */
   .note {
     background: var(--accent-soft);
@@ -571,6 +588,7 @@
 <section>
   <h2><span class="num">03</span>四種功能使用說明</h2>
 
+  <!-- 1. 查詢單筆 -->
   <div class="func-card">
     <div class="head">
       <div class="icon">1</div>
@@ -585,8 +603,16 @@
     <div class="note">
       <b>提示　</b>單號可以從清關報告、聊天訊息或哲盟系統中選取，來源無所謂
     </div>
+    <!-- 🌟 嵌入：查詢單筆影片 🌟 -->
+    <div class="video-container">
+      <video controls playsinline>
+        <source src="查詢單筆-操作錄影.mp4" type="video/mp4">
+        您的瀏覽器不支援影片播放功能。
+      </video>
+    </div>
   </div>
 
+  <!-- 2. 更新申報狀態 -->
   <div class="func-card">
     <div class="head">
       <div class="icon">2</div>
@@ -602,8 +628,16 @@
     <div class="note">
       <b>提醒　</b>程式只會偵測到「已按申報相符」及「已上傳個案委任書」這兩種狀態，所以也只會改成這兩種狀態
     </div>
+    <!-- 🌟 嵌入：更新申報狀態影片 🌟 -->
+    <div class="video-container">
+      <video controls playsinline>
+        <source src="更新申報狀態-操作錄影.mp4" type="video/mp4">
+        您的瀏覽器不支援影片播放功能。
+      </video>
+    </div>
   </div>
 
+  <!-- 3. 標記 Y/N 與分配人員 -->
   <div class="func-card">
     <div class="head">
       <div class="icon">3</div>
@@ -619,12 +653,20 @@
     <div class="note">
       <b>提示　</b>此功能也有「更新申報狀態」的功能
     </div>
+    <!-- 🌟 嵌入：標記YN與分配人員影片 🌟 -->
+    <div class="video-container">
+      <video controls playsinline>
+        <source src="標記YN與分配人員-操作錄影.mp4" type="video/mp4">
+        您的瀏覽器不支援影片播放功能。
+      </video>
+    </div>
   </div>
 
   <div class="note strong">
     <b>⚠　</b>使用「查詢單筆」、「更新申報狀態」和「標記 Y/N 與分配人員」三種功能前，<b>請先確保「ACS-EXP 物流管理系統」網頁已開啟且已登入</b>。安全起見沒有設定讓程式自動登入。
   </div>
 
+  <!-- 4. 標記重複資料 -->
   <div class="func-card">
     <div class="head">
       <div class="icon">4</div>
@@ -636,6 +678,13 @@
       <li>長按右鍵叫出選單，點選「<b>標記重複資料</b>」</li>
       <li>交給程式完成後續標記動作</li>
     </ol>
+    <!-- 🌟 嵌入：標記重複資料影片 🌟 -->
+    <div class="video-container">
+      <video controls playsinline>
+        <source src="標記重複資料-操作錄影.mp4" type="video/mp4">
+        您的瀏覽器不支援影片播放功能。
+      </video>
+    </div>
   </div>
 </section>
 
