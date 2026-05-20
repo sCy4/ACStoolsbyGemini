@@ -116,7 +116,6 @@ ApplyStagedUpdate() {
     ; 尋找暫存資料夾內的更新檔
     Loop Files, A_Temp "\Update_Temp_*.exe" {
         targetUpdateFile := A_LoopFilePath
-        ; 從檔名提取版本號 (例如 Update_Temp_v1.1.0.exe -> v1.1.0)
         if RegExMatch(A_LoopFileName, "Update_Temp_(v[\d\.]+)\.exe", &match)
             targetVersion := match[1]
         break
@@ -125,26 +124,22 @@ ApplyStagedUpdate() {
     if (targetUpdateFile = "")
         return
 
-    ; ★ 終極防護：檢查暫存檔的版本是否「真的」比現在新
     cleanTarget := StrReplace(targetVersion, "v", "")
     cleanCurrent := StrReplace(APP_CFG.Version, "v", "")
 
     if (VerCompare(cleanTarget, cleanCurrent) <= 0) {
-        ; 如果暫存檔版本比較舊或一樣 (幽靈殘留檔)，直接刪除它並中止更新
         try FileDelete(targetUpdateFile)
         return
     }
 
-    ; 確認無誤，執行更新
     ShowOSD("🔄 偵測到新版本 (" targetVersion ")，正在自動更新...")
     Sleep(2000)
 
-    psCommand := "Start-Sleep -Seconds 4; "
-               . "Remove-Item -Path '" fullCurrentPath "' -Force; "
-               . "Move-Item -Path '" targetUpdateFile "' -Destination '" fullCurrentPath "' -Force; "
-               . "Start-Process -FilePath '" fullCurrentPath "'"
+    ; ★ 捨棄 PowerShell，改用傳統 CMD 批次指令。
+    ; 邏輯：利用 ping 創造 3 秒延遲 (等待原本的 exe 關閉) -> 移動並覆蓋檔案 -> 啟動新檔案
+    cmdCommand := 'ping 127.0.0.1 -n 4 > nul & move /y "' targetUpdateFile '" "' fullCurrentPath '" & start "" "' fullCurrentPath '"'
     
-    Run("powershell.exe -WindowStyle Hidden -Command `"" psCommand "`"", A_ScriptDir, "Hide")
+    Run(A_ComSpec " /c " cmdCommand, A_ScriptDir, "Hide")
     ExitApp() 
 }
 ApplyStagedUpdate()
@@ -503,11 +498,13 @@ CheckAndUpdateInBackground() {
 
     try {
         whr := ComObject("WinHttp.WinHttpRequest.5.1")
-        whr.Open("GET", "https://api.github.com/repos/" APP_CFG.GithubRepo "/releases/latest", true)
+        ; ★ 加上 "?t=" 與時間戳，強制破解 Windows 快取，確保拿到最新資料
+        whr.Open("GET", "https://api.github.com/repos/" APP_CFG.GithubRepo "/releases/latest?t=" A_Now, true)
         whr.SetRequestHeader("User-Agent", "ACStools-AutoUpdater")
+        whr.SetRequestHeader("Cache-Control", "no-cache") ; 要求伺服器不要給快取
         whr.Send()
         
-        if (whr.WaitForResponse(2)) {
+        if (whr.WaitForResponse(5)) {
             if (whr.Status == 200) {
                 if RegExMatch(whr.ResponseText, '"tag_name":\s*"([^"]+)"', &matchTag) {
                     latestVersion := matchTag[1]
@@ -519,18 +516,22 @@ CheckAndUpdateInBackground() {
                     if (VerCompare(cleanLatest, cleanCurrent) > 0) {
                         if RegExMatch(whr.ResponseText, '"browser_download_url":\s*"([^"]+\.exe)"', &matchUrl) {
                             downloadUrl := matchUrl[1]
-                            ; ★ 將版本號加入暫存檔名中
                             tempExePath := A_Temp "\Update_Temp_" latestVersion ".exe"
                             
                             ; 先清空以前遺留的其他版本暫存檔
                             Loop Files, A_Temp "\Update_Temp_*.exe"
                                 try FileDelete(A_LoopFilePath)
                             
-                            psCmd := "Invoke-WebRequest -Uri '" downloadUrl "' -OutFile '" tempExePath "' -UseBasicParsing"
-                            Run("powershell.exe -WindowStyle Hidden -Command `"" psCmd "`"", , "Hide")
+                            ; ★ 改用 AHK 內建的 Download 函數，完全避免 PowerShell 權限與閃退問題
+                            try {
+                                Download(downloadUrl, tempExePath)
+                            }
                         }
                     }
                 }
+            } else {
+                ; 偵錯用：如果 Repo 是私有的，會出現 404
+                ; MsgBox("API 回應錯誤：" whr.Status, "更新檢查失敗")
             }
         }
     } catch {
