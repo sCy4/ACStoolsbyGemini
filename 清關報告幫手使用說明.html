@@ -2,9 +2,8 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<!-- 🌟 新增：讓手機版排版正確的關鍵標籤 🌟 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>清關報告幫手 使用說明書</title>
+<title>清關報告幫手 使用說明</title>
 <style>
   /* ─────────── 列印設定 ─────────── */
   @page {
@@ -120,7 +119,6 @@
     line-height: 1.75;
   }
 
-  /* ─────────── 強調與細節 ─────────── */
   b, strong { font-weight: 600; color: var(--text); }
   .muted { color: var(--text-muted); }
   .accent { color: var(--accent); }
@@ -196,17 +194,21 @@
   /* ─────────── 快捷鍵卡片（章節 2） ─────────── */
   .keys-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
     margin-top: 4px;
   }
   .key-card {
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 10px;
-    padding: 14px 12px;
+    padding: 14px 8px;
     text-align: center;
     box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
   }
   .keycap {
     display: inline-block;
@@ -214,18 +216,19 @@
     border: 1px solid var(--border);
     border-bottom-width: 2px;
     border-radius: 6px;
-    padding: 5px 10px;
+    padding: 5px 8px;
     font-family: "JetBrains Mono", "Consolas", monospace;
-    font-size: 9pt;
+    font-size: 8.8pt;
     font-weight: 600;
     color: var(--accent-deep);
-    margin-bottom: 8px;
-    min-width: 48px;
+    min-width: 54px;
+    white-space: nowrap;
   }
   .key-card .desc {
     font-size: 9pt;
-    color: var(--text-soft);
-    line-height: 1.45;
+    color: var(--text);
+    line-height: 1.4;
+    font-weight: 600;
   }
 
   /* ─────────── 功能卡片（章節 3） ─────────── */
@@ -307,19 +310,58 @@
     justify-content: center;
   }
 
-  /* 🌟 新增：影片播放器容器樣式 🌟 */
+  /* ─────────── 影片區塊 ─────────── */
+  .video-block {
+    margin: 14px 0 2px 0;
+  }
+  .video-caption {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 8.6pt;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  .video-caption::before {
+    content: "▶";
+    color: var(--accent);
+    font-size: 8pt;
+  }
   .video-container {
-    margin-top: 18px;
     border-radius: 8px;
     overflow: hidden;
     border: 1px solid var(--border);
     background: #000;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    box-shadow: var(--shadow);
+    max-height: 360px;
+    position: relative;
   }
   .video-container video {
     width: 100%;
     height: auto;
+    max-height: 360px;
     display: block;
+    object-fit: contain;
+  }
+  /* 列印時隱藏影片，顯示替代文字 */
+  @media print {
+    .video-block {
+      border: 1px dashed var(--accent-soft);
+      border-radius: 6px;
+      padding: 8px 12px;
+      background: var(--bg-soft);
+    }
+    .video-container { display: none; }
+    .video-caption {
+      margin: 0;
+      color: var(--text-soft);
+    }
+    .video-caption::after {
+      content: "（列印版無法播放，請見線上版）";
+      color: var(--text-muted);
+      font-size: 8pt;
+    }
   }
 
   /* ─────────── 提示框 ─────────── */
@@ -373,6 +415,11 @@
     color: var(--accent-deep);
     font-weight: 500;
   }
+  td.err-msg.generic {
+    color: var(--text-muted);
+    font-style: italic;
+    font-weight: 400;
+  }
 
   /* ─────────── 章節 4 安裝 ─────────── */
   .install-row {
@@ -415,7 +462,7 @@
     flex-shrink: 0;
   }
 
-  /* ─────────── FAQ（章節 6） ─────────── */
+  /* ─────────── FAQ ─────────── */
   .faq {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -461,7 +508,7 @@
     margin-left: -14px;
   }
 
-  /* ─────────── 聯絡與支援（章節 7） ─────────── */
+  /* ─────────── 聯絡與支援 ─────────── */
   .support-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -519,6 +566,48 @@
     font-size: 8pt;
     color: var(--text-muted);
   }
+
+  /* ─────────── 響應式：手機與小螢幕 ─────────── */
+  @media screen and (max-width: 720px) {
+    body {
+      padding: 20px 16px 40px;
+    }
+    .cover h1 { font-size: 22pt; }
+    .cover .meta { gap: 10px 16px; }
+    section > h2 { font-size: 13.5pt; }
+
+    /* 對比卡片改為直向 */
+    .compare {
+      grid-template-columns: 1fr;
+    }
+    .compare-arrow {
+      transform: rotate(90deg);
+      font-size: 14pt;
+    }
+
+    /* 快捷鍵變 2 欄 */
+    .keys-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* 安裝步驟直向 */
+    .install-row {
+      flex-direction: column;
+      gap: 10px;
+      align-items: stretch;
+    }
+    .install-arrow {
+      transform: rotate(90deg);
+      text-align: center;
+    }
+
+    /* FAQ、聯絡卡片改為單欄 */
+    .faq { grid-template-columns: 1fr; }
+    .support-grid { grid-template-columns: 1fr; }
+
+    /* 功能卡 padding 縮小 */
+    .func-card { padding: 14px 16px; }
+  }
 </style>
 </head>
 <body>
@@ -561,24 +650,24 @@
   <h2><span class="num">02</span>基本操作</h2>
   <div class="keys-grid">
     <div class="key-card">
-      <div class="keycap">🖱 左鍵</div>
-      <div class="desc">左鍵雙擊程式<br><b>啟動程式</b></div>
+      <span class="keycap">🖱 左鍵雙擊</span>
+      <div class="desc">雙擊程式以啟動</div>
     </div>
     <div class="key-card">
-      <div class="keycap">🖱 右鍵</div>
-      <div class="desc">長按右鍵 0.3 秒<br><b>叫出功能選單</b></div>
+      <span class="keycap">🖱 右鍵長按</span>
+      <div class="desc">叫出功能選單<br><small style="font-weight:400;color:var(--text-muted);">長按 0.3 秒</small></div>
     </div>
     <div class="key-card">
-      <div class="keycap">Esc</div>
-      <div class="desc">Esc<br><b>暫停與恢復程式運行</b></div>
+      <span class="keycap">Esc</span>
+      <div class="desc">暫停 / 恢復運作</div>
     </div>
     <div class="key-card">
-      <div class="keycap">F8</div>
-      <div class="desc">F8<br><b>關閉程式</b></div>
+      <span class="keycap">F8</span>
+      <div class="desc">關閉程式</div>
     </div>
     <div class="key-card">
-      <div class="keycap">F9</div>
-      <div class="desc">F9<br><b>檢查並更新程式</b></div>
+      <span class="keycap">F9</span>
+      <div class="desc">檢查並更新程式</div>
     </div>
   </div>
 </section>
@@ -603,12 +692,14 @@
     <div class="note">
       <b>提示　</b>單號可以從清關報告、聊天訊息或哲盟系統中選取，來源無所謂
     </div>
-    <!-- 🌟 嵌入：查詢單筆影片 🌟 -->
-    <div class="video-container">
-      <video controls playsinline>
-        <source src="查詢單筆-操作錄影.mp4" type="video/mp4">
-        您的瀏覽器不支援影片播放功能。
-      </video>
+    <div class="video-block">
+      <div class="video-caption">操作示範影片</div>
+      <div class="video-container">
+        <video controls playsinline preload="metadata">
+          <source src="查詢單筆-操作錄影.mp4" type="video/mp4">
+          您的瀏覽器不支援影片播放功能。
+        </video>
+      </div>
     </div>
   </div>
 
@@ -628,12 +719,14 @@
     <div class="note">
       <b>提醒　</b>程式只會偵測到「已按申報相符」及「已上傳個案委任書」這兩種狀態，所以也只會改成這兩種狀態
     </div>
-    <!-- 🌟 嵌入：更新申報狀態影片 🌟 -->
-    <div class="video-container">
-      <video controls playsinline>
-        <source src="更新申報狀態-操作錄影.mp4" type="video/mp4">
-        您的瀏覽器不支援影片播放功能。
-      </video>
+    <div class="video-block">
+      <div class="video-caption">操作示範影片</div>
+      <div class="video-container">
+        <video controls playsinline preload="metadata">
+          <source src="更新申報狀態-操作錄影.mp4" type="video/mp4">
+          您的瀏覽器不支援影片播放功能。
+        </video>
+      </div>
     </div>
   </div>
 
@@ -653,12 +746,14 @@
     <div class="note">
       <b>提示　</b>此功能也有「更新申報狀態」的功能
     </div>
-    <!-- 🌟 嵌入：標記YN與分配人員影片 🌟 -->
-    <div class="video-container">
-      <video controls playsinline>
-        <source src="標記YN與分配人員-操作錄影.mp4" type="video/mp4">
-        您的瀏覽器不支援影片播放功能。
-      </video>
+    <div class="video-block">
+      <div class="video-caption">操作示範影片</div>
+      <div class="video-container">
+        <video controls playsinline preload="metadata">
+          <source src="標記YN與分配人員-操作錄影.mp4" type="video/mp4">
+          您的瀏覽器不支援影片播放功能。
+        </video>
+      </div>
     </div>
   </div>
 
@@ -678,12 +773,14 @@
       <li>長按右鍵叫出選單，點選「<b>標記重複資料</b>」</li>
       <li>交給程式完成後續標記動作</li>
     </ol>
-    <!-- 🌟 嵌入：標記重複資料影片 🌟 -->
-    <div class="video-container">
-      <video controls playsinline>
-        <source src="標記重複資料-操作錄影.mp4" type="video/mp4">
-        您的瀏覽器不支援影片播放功能。
-      </video>
+    <div class="video-block">
+      <div class="video-caption">操作示範影片</div>
+      <div class="video-container">
+        <video controls playsinline preload="metadata">
+          <source src="標記重複資料-操作錄影.mp4" type="video/mp4">
+          您的瀏覽器不支援影片播放功能。
+        </video>
+      </div>
     </div>
   </div>
 </section>
@@ -704,10 +801,11 @@
       <div class="step-text">雙擊桌面 <span class="code">清關報告幫手.exe</span> 開啟程式</div>
     </div>
   </div>
-    <div class="note">
-      <b>檢查更新　</b>建議偶爾按一下 F9 檢查更新
-    </div>
+  <div class="note">
+    <b>檢查更新　</b>建議偶爾按一下 <span class="code">F9</span> 檢查更新
+  </div>
 </section>
+
 
 <!-- ════════════════ 05 常見問題 ════════════════ -->
 <section>
@@ -745,6 +843,7 @@
     </div>
   </div>
 </section>
+
 
 <!-- ════════════════ 06 錯誤訊息對照表 ════════════════ -->
 <section>
@@ -790,8 +889,8 @@
         <td>發生未預期錯誤。再執行一次。持續失敗請聯繫作者：蘇宗彥 - ACS 台北站。</td>
       </tr>
       <tr>
-        <td class="err-msg">(執行更新時的各式錯誤訊息)</td>
-        <td>發生未預期錯誤。再執行一次。持續失敗請聯繫作者：蘇宗彥 - ACS 台北站。</td>
+        <td class="err-msg generic">執行更新時的各式錯誤訊息</td>
+        <td>程式自動更新失敗。再按一次 <span class="code">F9</span> 重試。持續失敗請聯繫作者：蘇宗彥 - ACS 台北站。</td>
       </tr>
     </tbody>
   </table>
@@ -804,7 +903,7 @@
 
   <div class="support-grid">
     <div class="support-card">
-      <h3>作者資訊</h3>
+      <h3>👤 作者資訊</h3>
       <div class="info-row">
         <span class="label wide">Name</span>
         <span class="value">蘇宗彥</span>
@@ -820,7 +919,7 @@
     </div>
 
     <div class="support-card">
-      <h3>回報問題請附上</h3>
+      <h3>🐞 回報問題請附上</h3>
       <div class="info-row">
         <span class="label">①</span>
         <span class="value">問題畫面截圖</span>
@@ -836,7 +935,7 @@
     </div>
 
     <div class="support-card">
-      <h3>提出改善構想請附上</h3>
+      <h3>💡 提改善構想請附上</h3>
       <div class="info-row">
         <span class="label">①</span>
         <span class="value">你的願景及成品檔案</span>
