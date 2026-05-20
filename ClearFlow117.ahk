@@ -2,7 +2,7 @@
 #Include %A_ScriptDir%\UIA.ahk
 
 ; ==============================================================================
-; 變數初始化 (移至最上方以避免 #HotIf 找不到變數提早報錯)
+; ★ 變數初始化 (移至最上方以避免 #HotIf 找不到變數提早報錯)
 ; ==============================================================================
 global isRunning := false
 global isMouseLocked := false
@@ -14,11 +14,11 @@ DllCall("shell32\SHChangeNotify", "UInt", 0x00002000, "UInt", 0x0005, "Str", A_S
 ; ==============================================================================
 global APP_CFG := {
     ; --- 版本與更新設定 ---
-    Version: "v1.1.5",
+    Version: "v1.1.7",
     GithubRepo: "sCy4/ACStoolsbyGemini",  ; ★ 發布前請務必更改為你的 GitHub 帳號/儲存庫名稱
 
     ; --- 系統檔案與網址 ---
-    ; 設定檔資料夾與檔名分開定義,未來要搬位置或改名只動一處
+    ; ★ 設定檔資料夾與檔名分開定義,未來要搬位置或改名只動一處
     ConfigDir: A_AppData "\ACStools",
     ConfigFileName: "腳本設定檔-清關名單預設分配人員.txt",
     DefaultAssignees: "萍, 富, 蓁, 姿, 彥, 潔",
@@ -44,6 +44,17 @@ global APP_CFG := {
     Osd_Paused: "⏸️ 腳本暫停：你現在可以操作電腦`n(恢復：回到暫停時的畫面按 ESC)  (結束：F8)",
     Osd_Resuming: "⏳ 腳本恢復中...",
     Osd_ResumeRun: "▶️ 繼續運行...",
+
+    ; --- 提示訊息與對話框 (更新流程) ---
+    Osd_UpdateChecking: "🔄 檢查更新中...",
+    Osd_UpdateLatest: "✅ 已經是最新版本 (" "{1}" ")",
+    Osd_UpdateDownloading: "🔄 發現新版本 ({1})，正在下載...",
+    Osd_UpdateApplying: "🔄 下載完成，正在套用更新...",
+    Osd_UpdateNoCompiled: "ℹ️ 開發模式下不檢查更新",
+    Err_UpdateConn: "■ 錯誤：無法連線到 GitHub 檢查更新",
+    Err_UpdateParse: "■ 錯誤：GitHub 回應格式異常",
+    Err_UpdateNoExe: "■ 錯誤：找不到可下載的更新檔",
+    Err_UpdateDownload: "■ 錯誤：更新檔下載失敗",
     
     ; --- 提示訊息與對話框 (輸入與報告) ---
     Input_Title: "本次參與分配的人員",
@@ -62,7 +73,7 @@ global APP_CFG := {
     Key_HighlightMacro: "^+!1"  ; 代表 Ctrl + Alt + Shift + 1
 }
 
-; 便利常數:設定檔完整路徑 (寫一次,各處沿用)
+; ★ 便利常數:設定檔完整路徑 (寫一次,各處沿用)
 global CONFIG_FILE_PATH := APP_CFG.ConfigDir "\" APP_CFG.ConfigFileName
 
 ; ==============================================================================
@@ -104,6 +115,8 @@ ApplyRoundedCorners(hwnd, radius) {
 
 ; ==============================================================================
 ; ★ 啟動攔截：檢查是否有待命的更新檔 (第一時間無痕替換)
+;   保留此函式以防 F9 下載完成後尚未套用就發生意外 (例如使用者強制關機),
+;   下次啟動時仍會自動完成替換,不會留下殘留檔案。
 ; ==============================================================================
 ApplyStagedUpdate() {
     if !A_IsCompiled
@@ -116,6 +129,7 @@ ApplyStagedUpdate() {
     ; 尋找暫存資料夾內的更新檔
     Loop Files, A_Temp "\Update_Temp_*.exe" {
         targetUpdateFile := A_LoopFilePath
+        ; 從檔名提取版本號 (例如 Update_Temp_v1.1.0.exe -> v1.1.0)
         if RegExMatch(A_LoopFileName, "Update_Temp_(v[\d\.]+)\.exe", &match)
             targetVersion := match[1]
         break
@@ -124,22 +138,26 @@ ApplyStagedUpdate() {
     if (targetUpdateFile = "")
         return
 
+    ; ★ 終極防護：檢查暫存檔的版本是否「真的」比現在新
     cleanTarget := StrReplace(targetVersion, "v", "")
     cleanCurrent := StrReplace(APP_CFG.Version, "v", "")
 
     if (VerCompare(cleanTarget, cleanCurrent) <= 0) {
+        ; 如果暫存檔版本比較舊或一樣 (幽靈殘留檔)，直接刪除它並中止更新
         try FileDelete(targetUpdateFile)
         return
     }
 
+    ; 確認無誤，執行更新
     ShowOSD("🔄 偵測到新版本 (" targetVersion ")，正在自動更新...")
     Sleep(2000)
 
-    ; ★ 捨棄 PowerShell，改用傳統 CMD 批次指令。
-    ; 邏輯：利用 ping 創造 3 秒延遲 (等待原本的 exe 關閉) -> 移動並覆蓋檔案 -> 啟動新檔案
-    cmdCommand := 'ping 127.0.0.1 -n 4 > nul & move /y "' targetUpdateFile '" "' fullCurrentPath '" & start "" "' fullCurrentPath '"'
+    psCommand := "Start-Sleep -Seconds 4; "
+               . "Remove-Item -Path '" fullCurrentPath "' -Force; "
+               . "Move-Item -Path '" targetUpdateFile "' -Destination '" fullCurrentPath "' -Force; "
+               . "Start-Process -FilePath '" fullCurrentPath "'"
     
-    Run(A_ComSpec " /c " cmdCommand, A_ScriptDir, "Hide")
+    Run("powershell.exe -WindowStyle Hidden -Command `"" psCommand "`"", A_ScriptDir, "Hide")
     ExitApp() 
 }
 ApplyStagedUpdate()
@@ -492,50 +510,120 @@ EscapeRegex(s) {
     return RegExReplace(s, "([\\.*+?^${}()|\[\]\/])", "\$1")
 }
 
-CheckAndUpdateInBackground() {
-    if !A_IsCompiled
+; ==============================================================================
+; ★ F9 手動更新流程
+;   1. 連線 GitHub API 抓最新 Release
+;   2. 比對版本號:同版 → 顯示「已是最新版」並結束
+;                  新版 → 下載到暫存檔
+;   3. 下載完成 → 立刻啟動 PowerShell 換檔重啟,自己 ExitApp
+; ==============================================================================
+ManualCheckForUpdate(*) {
+    ; 開發模式 (.ahk 直接執行) 不檢查
+    if !A_IsCompiled {
+        ShowOSD(APP_CFG.Osd_UpdateNoCompiled)
+        SetTimer(HideOSD, -2000)
         return
+    }
+
+    ; 運作中不允許更新,避免中斷工作
+    if (isRunning) {
+        return
+    }
+
+    ShowOSD(APP_CFG.Osd_UpdateChecking)
 
     try {
         whr := ComObject("WinHttp.WinHttpRequest.5.1")
-        ; ★ 加上 "?t=" 與時間戳，強制破解 Windows 快取，確保拿到最新資料
-        whr.Open("GET", "https://api.github.com/repos/" APP_CFG.GithubRepo "/releases/latest?t=" A_Now, true)
+        whr.Open("GET", "https://api.github.com/repos/" APP_CFG.GithubRepo "/releases/latest", true)
         whr.SetRequestHeader("User-Agent", "ACStools-AutoUpdater")
-        whr.SetRequestHeader("Cache-Control", "no-cache") ; 要求伺服器不要給快取
         whr.Send()
-        
-        if (whr.WaitForResponse(5)) {
-            if (whr.Status == 200) {
-                if RegExMatch(whr.ResponseText, '"tag_name":\s*"([^"]+)"', &matchTag) {
-                    latestVersion := matchTag[1]
-                    
-                    cleanLatest := StrReplace(latestVersion, "v", "")
-                    cleanCurrent := StrReplace(APP_CFG.Version, "v", "")
-                    
-                    ; 只有遠端大於目前版本才下載
-                    if (VerCompare(cleanLatest, cleanCurrent) > 0) {
-                        if RegExMatch(whr.ResponseText, '"browser_download_url":\s*"([^"]+\.exe)"', &matchUrl) {
-                            downloadUrl := matchUrl[1]
-                            tempExePath := A_Temp "\Update_Temp_" latestVersion ".exe"
-                            
-                            ; 先清空以前遺留的其他版本暫存檔
-                            Loop Files, A_Temp "\Update_Temp_*.exe"
-                                try FileDelete(A_LoopFilePath)
-                            
-                            ; ★ 改用 AHK 內建的 Download 函數，完全避免 PowerShell 權限與閃退問題
-                            try {
-                                Download(downloadUrl, tempExePath)
-                            }
-                        }
-                    }
-                }
-            } else {
-                ; 偵錯用：如果 Repo 是私有的，會出現 404
-                ; MsgBox("API 回應錯誤：" whr.Status, "更新檢查失敗")
-            }
+
+        ; 等最多 10 秒回應
+        if !whr.WaitForResponse(10) {
+            HideOSD()
+            MsgBox(APP_CFG.Err_UpdateConn, "提示")
+            return
         }
-    } catch {
-        return
+
+        if (whr.Status != 200) {
+            HideOSD()
+            MsgBox(APP_CFG.Err_UpdateConn " (HTTP " whr.Status ")", "提示")
+            return
+        }
+
+        ; 解析最新版本號
+        if !RegExMatch(whr.ResponseText, '"tag_name":\s*"([^"]+)"', &matchTag) {
+            HideOSD()
+            MsgBox(APP_CFG.Err_UpdateParse, "提示")
+            return
+        }
+        latestVersion := matchTag[1]
+
+        cleanLatest := StrReplace(latestVersion, "v", "")
+        cleanCurrent := StrReplace(APP_CFG.Version, "v", "")
+
+        ; 版本相同或本機較新 → 已是最新版
+        if (VerCompare(cleanLatest, cleanCurrent) <= 0) {
+            ShowOSD(Format(APP_CFG.Osd_UpdateLatest, APP_CFG.Version))
+            SetTimer(HideOSD, -2000)
+            return
+        }
+
+        ; 發現新版 → 解析下載連結
+        if !RegExMatch(whr.ResponseText, '"browser_download_url":\s*"([^"]+\.exe)"', &matchUrl) {
+            HideOSD()
+            MsgBox(APP_CFG.Err_UpdateNoExe, "提示")
+            return
+        }
+        downloadUrl := matchUrl[1]
+        tempExePath := A_Temp "\Update_Temp_" latestVersion ".exe"
+
+        ShowOSD(Format(APP_CFG.Osd_UpdateDownloading, latestVersion))
+
+        ; 先清空以前遺留的暫存檔
+        Loop Files, A_Temp "\Update_Temp_*.exe"
+            try FileDelete(A_LoopFilePath)
+
+        ; 同步下載 (用 WinHttpRequest 而非 PowerShell,才能準確知道何時下載完)
+        dlReq := ComObject("WinHttp.WinHttpRequest.5.1")
+        dlReq.Open("GET", downloadUrl, false)
+        dlReq.Send()
+
+        if (dlReq.Status != 200) {
+            HideOSD()
+            MsgBox(APP_CFG.Err_UpdateDownload " (HTTP " dlReq.Status ")", "提示")
+            return
+        }
+
+        ; 把回應 bytes 寫入暫存檔
+        try {
+            adoStream := ComObject("ADODB.Stream")
+            adoStream.Type := 1  ; binary
+            adoStream.Open()
+            adoStream.Write(dlReq.ResponseBody)
+            adoStream.SaveToFile(tempExePath, 2)  ; 2 = overwrite
+            adoStream.Close()
+        } catch as err {
+            HideOSD()
+            MsgBox(APP_CFG.Err_UpdateDownload " " err.Message, "提示")
+            return
+        }
+
+        ; 下載成功 → 立刻套用更新
+        ShowOSD(APP_CFG.Osd_UpdateApplying)
+        Sleep(1500)
+
+        fullCurrentPath := A_ScriptFullPath
+        psCommand := "Start-Sleep -Seconds 2; "
+                   . "Remove-Item -Path '" fullCurrentPath "' -Force; "
+                   . "Move-Item -Path '" tempExePath "' -Destination '" fullCurrentPath "' -Force; "
+                   . "Start-Process -FilePath '" fullCurrentPath "'"
+
+        Run("powershell.exe -WindowStyle Hidden -Command `"" psCommand "`"", A_ScriptDir, "Hide")
+        ExitApp()
+    } catch as err {
+        HideOSD()
+        MsgBox(APP_CFG.Err_UpdateConn " " err.Message, "提示")
     }
 }
 
@@ -680,11 +768,6 @@ SendToGAS(dataList, totalCount, matchCount, validCount, noMatchCount) {
 ShowOSD("✅ 腳本已啟動 (版本：" APP_CFG.Version ")")
 SetTimer(HideOSD, -2000)
 
-; ★ 啟動後 5 秒先在背景偷偷檢查第一次
-SetTimer(CheckAndUpdateInBackground, -5000)
-; ★ 之後每隔 1.5 小時 (5400000 毫秒) 背景自動循環檢查一次
-SetTimer(CheckAndUpdateInBackground, 5400000)
-
 SetTitleMatchMode 2
 
 ; ★ 統一退出清理:停止游標 Timer + 還原游標 + 釋放 GDI Brush
@@ -724,6 +807,8 @@ Customs_StandaloneF8(*) {
 
 Hotkey "$RButton", Customs_StandaloneRButton, "T2"
 Hotkey "F8", Customs_StandaloneF8
+; ★ F9 手動檢查更新
+Hotkey "F9", ManualCheckForUpdate
 
 ; --- 全域熱鍵：防誤觸滑鼠鎖 ---
 #HotIf isMouseLocked
