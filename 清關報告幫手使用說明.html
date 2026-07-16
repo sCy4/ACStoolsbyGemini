@@ -4,958 +4,440 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>清關報告幫手 使用說明</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Space+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
-  /* ─────────── 列印設定 ─────────── */
-  @page {
-    size: A4;
-    margin: 16mm 14mm;
-  }
-
-  /* ─────────── 色彩變數（Claude 經典淺色） ─────────── */
-  :root {
-    --bg:           #FAF9F5;
-    --bg-soft:      #F2EFE6;
-    --bg-card:      #FFFFFF;
-    --text:         #1C1917;
-    --text-muted:   #78716C;
-    --text-soft:    #57534E;
-    --accent:       #CF6A4C;
-    --accent-soft:  #F4E1D6;
-    --accent-deep:  #A8543B;
-    --border:       #E7E2D6;
-    --border-soft:  #EFEBE0;
-    --shadow:       0 1px 2px rgba(28, 25, 23, 0.04);
-  }
-
-  * { box-sizing: border-box; }
-
-  html, body {
-    margin: 0;
-    padding: 0;
-    background: var(--bg);
-    color: var(--text);
-    font-family: "Inter", -apple-system, "Segoe UI", "PingFang TC",
-                 "Microsoft JhengHei", "Noto Sans TC", sans-serif;
-    font-size: 10pt;
-    line-height: 1.65;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  body {
-    max-width: 760px;
-    margin: 0 auto;
-    padding: 30px 36px 60px;
-  }
-
-  @media print {
-    body { padding: 0; max-width: none; }
-  }
-
-  /* ─────────── 封面 ─────────── */
-  .cover {
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 20px;
-    margin-bottom: 28px;
-  }
-  .cover h1 {
-    font-size: 28pt;
-    font-weight: 600;
-    margin: 0 0 4px 0;
-    letter-spacing: -0.5px;
-    color: var(--text);
-  }
-  .cover .tagline {
-    font-size: 11pt;
-    color: var(--text-muted);
-    margin: 0 0 14px 0;
-  }
-  .cover .meta {
-    display: flex;
-    gap: 22px;
-    flex-wrap: wrap;
-    font-size: 8.8pt;
-    color: var(--text-soft);
-  }
-  .cover .meta b {
-    color: var(--text);
-    font-weight: 600;
-  }
-
-  /* ─────────── 章節 ─────────── */
-  section {
-    margin-top: 28px;
-  }
-  section > h2 {
-    font-size: 15pt;
-    font-weight: 600;
-    margin: 0 0 12px 0;
-    color: var(--text);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    break-after: avoid;
-  }
-  section > h2 .num {
-    font-size: 10pt;
-    font-weight: 500;
-    color: var(--accent);
-    background: var(--accent-soft);
-    padding: 3px 11px;
-    border-radius: 12px;
-    letter-spacing: 0.5px;
-  }
-
-  h3 {
-    font-size: 10.5pt;
-    font-weight: 600;
-    margin: 14px 0 6px 0;
-    color: var(--text);
-  }
-
-  p { margin: 6px 0; }
-  p.lead {
-    font-size: 10.5pt;
-    color: var(--text-soft);
-    line-height: 1.75;
-  }
-
-  b, strong { font-weight: 600; color: var(--text); }
-  .muted { color: var(--text-muted); }
-  .accent { color: var(--accent); }
-
-  .code {
-    background: var(--bg-soft);
-    border: 1px solid var(--border-soft);
-    padding: 1px 6px;
-    border-radius: 4px;
-    font-family: "JetBrains Mono", "Consolas", "Menlo", monospace;
-    font-size: 8.8pt;
-    color: var(--accent-deep);
-  }
-
-  /* ─────────── 對比卡片（章節 1） ─────────── */
-  .compare {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    gap: 14px;
-    margin: 14px 0 6px 0;
-    align-items: stretch;
-  }
-  .compare-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 18px;
-    box-shadow: var(--shadow);
-  }
-  .compare-card.before {
-    background: var(--bg-soft);
-    border-color: var(--border);
-  }
-  .compare-card.after {
-    background: linear-gradient(135deg, #FFF6F0 0%, #FFFFFF 100%);
-    border-color: var(--accent-soft);
-  }
-  .compare-card .label {
-    font-size: 8.5pt;
-    color: var(--text-muted);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    margin-bottom: 6px;
-  }
-  .compare-card.after .label { color: var(--accent); }
-  .compare-card .figure {
-    font-size: 13pt;
-    font-weight: 600;
-    color: var(--text);
-    line-height: 1.4;
-  }
-  .compare-card.after .figure { color: var(--accent-deep); }
-  .compare-card .boost {
-    display: inline-block;
-    margin-top: 4px;
-    font-size: 8.8pt;
-    color: var(--accent);
-    background: var(--accent-soft);
-    padding: 1px 8px;
-    border-radius: 8px;
-    font-weight: 600;
-  }
-  .compare-arrow {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--accent);
-    font-size: 16pt;
-    font-weight: 300;
-  }
-
-  /* ─────────── 快捷鍵卡片（章節 2） ─────────── */
-  .keys-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 8px;
-    margin-top: 4px;
-  }
-  .key-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 8px;
-    text-align: center;
-    box-shadow: var(--shadow);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-  }
-  .keycap {
-    display: inline-block;
-    background: linear-gradient(180deg, #FFFFFF 0%, var(--bg-soft) 100%);
-    border: 1px solid var(--border);
-    border-bottom-width: 2px;
-    border-radius: 6px;
-    padding: 5px 8px;
-    font-family: "JetBrains Mono", "Consolas", monospace;
-    font-size: 8.8pt;
-    font-weight: 600;
-    color: var(--accent-deep);
-    min-width: 54px;
-    white-space: nowrap;
-  }
-  .key-card .desc {
-    font-size: 9pt;
-    color: var(--text);
-    line-height: 1.4;
-    font-weight: 600;
-  }
-
-  /* ─────────── 功能卡片（章節 3） ─────────── */
-  .func-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px 20px;
-    margin: 12px 0;
-    break-inside: avoid;
-    box-shadow: var(--shadow);
-  }
-  .func-card .head {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 4px;
-  }
-  .func-card .icon {
-    width: 28px;
-    height: 28px;
-    background: var(--accent);
-    color: #FFFFFF;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11pt;
-    font-weight: 600;
-    flex-shrink: 0;
-  }
-  .func-card .name {
-    font-size: 12pt;
-    font-weight: 600;
-    color: var(--text);
-  }
-  .func-card .use-case {
-    font-size: 9pt;
-    color: var(--text-soft);
-    margin: 6px 0 10px 0;
-    padding: 6px 12px;
-    background: var(--bg-soft);
-    border-radius: 6px;
-    border-left: 2px solid var(--accent-soft);
-  }
-  .func-card .use-case::before {
-    content: "情境　";
-    font-weight: 600;
-    color: var(--accent-deep);
-  }
-  .func-card .steps {
-    margin: 6px 0 0 0;
-    padding: 0;
-    list-style: none;
-    counter-reset: step;
-  }
-  .func-card .steps li {
-    counter-increment: step;
-    position: relative;
-    padding-left: 28px;
-    margin-bottom: 5px;
-    line-height: 1.55;
-    font-size: 9.5pt;
-  }
-  .func-card .steps li::before {
-    content: counter(step);
-    position: absolute;
-    left: 0;
-    top: 1px;
-    width: 19px;
-    height: 19px;
-    background: var(--bg-soft);
-    color: var(--accent-deep);
-    border-radius: 50%;
-    font-size: 8pt;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  /* ─────────── 影片區塊 ─────────── */
-  .video-block {
-    margin: 14px 0 2px 0;
-  }
-  .video-caption {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 8.6pt;
-    color: var(--text-muted);
-    margin-bottom: 6px;
-    font-weight: 500;
-  }
-  .video-caption::before {
-    content: "▶";
-    color: var(--accent);
-    font-size: 8pt;
-  }
-  .video-container {
-    border-radius: 8px;
-    overflow: hidden;
-    border: 1px solid var(--border);
-    background: #000;
-    box-shadow: var(--shadow);
-    max-height: 360px;
-    position: relative;
-  }
-  .video-container video {
-    width: 100%;
-    height: auto;
-    max-height: 360px;
-    display: block;
-    object-fit: contain;
-  }
-  /* 列印時隱藏影片，顯示替代文字 */
-  @media print {
-    .video-block {
-      border: 1px dashed var(--accent-soft);
-      border-radius: 6px;
-      padding: 8px 12px;
-      background: var(--bg-soft);
-    }
-    .video-container { display: none; }
-    .video-caption {
-      margin: 0;
-      color: var(--text-soft);
-    }
-    .video-caption::after {
-      content: "（列印版無法播放，請見線上版）";
-      color: var(--text-muted);
-      font-size: 8pt;
-    }
-  }
-
-  /* ─────────── 提示框 ─────────── */
-  .note {
-    background: var(--accent-soft);
-    border-left: 3px solid var(--accent);
-    padding: 8px 14px;
-    margin: 10px 0;
-    border-radius: 0 6px 6px 0;
-    font-size: 9pt;
-    color: var(--text-soft);
-    line-height: 1.55;
-  }
-  .note b { color: var(--accent-deep); font-weight: 600; }
-  .note.strong {
-    background: #FFEDE3;
-    border-left-width: 4px;
-    font-size: 9.2pt;
-  }
-
-  /* ─────────── 表格（錯誤對照） ─────────── */
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 10px 0;
-    font-size: 9pt;
-    background: var(--bg-card);
-    border-radius: 8px;
-    overflow: hidden;
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow);
-  }
-  thead th {
-    background: var(--bg-soft);
-    color: var(--text);
-    font-weight: 600;
-    text-align: left;
-    padding: 9px 14px;
-    border-bottom: 1px solid var(--border);
-    font-size: 9pt;
-  }
-  tbody td {
-    padding: 9px 14px;
-    border-bottom: 1px solid var(--border-soft);
-    vertical-align: top;
-    line-height: 1.55;
-  }
-  tbody tr:last-child td { border-bottom: none; }
-  tbody tr:nth-child(even) { background: #FBFAF6; }
-  td.err-msg {
-    color: var(--accent-deep);
-    font-weight: 500;
-  }
-  td.err-msg.generic {
-    color: var(--text-muted);
-    font-style: italic;
-    font-weight: 400;
-  }
-
-  /* ─────────── 章節 4 安裝 ─────────── */
-  .install-row {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 20px;
-    margin-top: 6px;
-    box-shadow: var(--shadow);
-  }
-  .install-step {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .install-step .step-num {
-    width: 26px;
-    height: 26px;
-    background: var(--accent);
-    color: #FFFFFF;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10pt;
-    font-weight: 600;
-    flex-shrink: 0;
-  }
-  .install-step .step-text {
-    font-size: 9.5pt;
-    color: var(--text);
-  }
-  .install-arrow {
-    color: var(--accent);
-    font-size: 14pt;
-    flex-shrink: 0;
-  }
-
-  /* ─────────── FAQ ─────────── */
-  .faq {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px 22px;
-    margin-top: 6px;
-  }
-  .faq-item {
-    break-inside: avoid;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 16px;
-    box-shadow: var(--shadow);
-  }
-  .faq-q {
-    font-weight: 600;
-    color: var(--text);
-    margin-bottom: 5px;
-    font-size: 9.5pt;
-    line-height: 1.45;
-    display: flex;
-    gap: 6px;
-  }
-  .faq-q::before {
-    content: "Q";
-    color: var(--accent);
-    font-weight: 700;
-    flex-shrink: 0;
-  }
-  .faq-a {
-    font-size: 8.8pt;
-    color: var(--text-soft);
-    line-height: 1.6;
-    padding-left: 14px;
-    display: flex;
-    gap: 6px;
-  }
-  .faq-a::before {
-    content: "A";
-    color: var(--text-muted);
-    font-weight: 700;
-    flex-shrink: 0;
-    margin-left: -14px;
-  }
-
-  /* ─────────── 聯絡與支援 ─────────── */
-  .support-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    margin-top: 6px;
-  }
-  .support-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 16px;
-    box-shadow: var(--shadow);
-    break-inside: avoid;
-  }
-  .support-card h3 {
-    margin: 0 0 8px 0;
-    font-size: 9.8pt;
-    color: var(--accent-deep);
-    padding-bottom: 6px;
-    border-bottom: 1px solid var(--border-soft);
-  }
-  .support-card .info-row {
-    display: flex;
-    padding: 4px 0;
-    font-size: 8.8pt;
-    line-height: 1.5;
-  }
-  .support-card .info-row .label {
-    color: var(--text-muted);
-    min-width: 22px;
-    flex-shrink: 0;
-    font-weight: 600;
-    margin-right: 8px;
-  }
-  .support-card .info-row .label.wide {
-    min-width: 42px;
-  }
-  .support-card .info-row .value {
-    color: var(--text);
-    flex: 1;
-    word-break: break-all;
-  }
-  .support-card .info-row .value.mono {
-    font-family: "JetBrains Mono", "Consolas", monospace;
-    font-size: 8.4pt;
-    color: var(--accent-deep);
-  }
-
-  /* ─────────── 頁尾 ─────────── */
-  .footer {
-    margin-top: 40px;
-    padding-top: 14px;
-    border-top: 1px solid var(--border);
-    text-align: center;
-    font-size: 8pt;
-    color: var(--text-muted);
-  }
-
-  /* ─────────── 響應式：手機與小螢幕 ─────────── */
-  @media screen and (max-width: 720px) {
-    body {
-      padding: 20px 16px 40px;
-    }
-    .cover h1 { font-size: 22pt; }
-    .cover .meta { gap: 10px 16px; }
-    section > h2 { font-size: 13.5pt; }
-
-    /* 對比卡片改為直向 */
-    .compare {
-      grid-template-columns: 1fr;
-    }
-    .compare-arrow {
-      transform: rotate(90deg);
-      font-size: 14pt;
-    }
-
-    /* 快捷鍵變 2 欄 */
-    .keys-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-
-    /* 安裝步驟直向 */
-    .install-row {
-      flex-direction: column;
-      gap: 10px;
-      align-items: stretch;
-    }
-    .install-arrow {
-      transform: rotate(90deg);
-      text-align: center;
-    }
-
-    /* FAQ、聯絡卡片改為單欄 */
-    .faq { grid-template-columns: 1fr; }
-    .support-grid { grid-template-columns: 1fr; }
-
-    /* 功能卡 padding 縮小 */
-    .func-card { padding: 14px 16px; }
-  }
+  html, body { margin:0; padding:0; background:#F4F3EE; color:#191919; font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif; -webkit-font-smoothing:antialiased; }
+  a { color:#191919; text-decoration:underline; text-decoration-color:#F5C518; text-decoration-thickness:2px; }
+  a:hover { color:#8A6D00; }
 </style>
 </head>
 <body>
 
-<!-- ════════════════ 封面區 ════════════════ -->
-<div class="cover">
-  <h1>清關報告幫手</h1>
-  <p class="tagline">使用說明</p>
-  <div class="meta">
-    <span><b>適用：</b>ACS 清關作業人員</span>
-    <span><b>程式版本：</b>v1</span>
+<div style="max-width:860px; margin:0 auto; padding:44px 28px 70px; font-size:14px; line-height:1.7;">
+
+  <!-- 封面 -->
+  <div style="background:#FFD94A; border:3px solid #191919; box-shadow:8px 8px 0 #191919; padding:34px 36px 30px; margin-bottom:44px;">
+    <div data-t="cover_badge" style="display:inline-block; background:#191919; color:#FFD94A; font-size:12px; font-weight:700; letter-spacing:3px; padding:4px 12px; margin-bottom:14px;"></div>
+    <h1 data-t="cover_title" style="font-size:42px; font-weight:900; margin:0 0 6px 0; letter-spacing:1px; line-height:1.2;"></h1>
+    <p data-t="cover_subtitle" style="margin:0 0 20px 0; font-size:15px; font-weight:500; color:#3D3729;"></p>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <span data-t="cover_tag1" style="background:#FFFFFF; border:2px solid #191919; padding:3px 12px; font-size:12px; font-weight:700;"></span>
+      <span data-t="cover_tag2" style="background:#FFFFFF; border:2px solid #191919; padding:3px 12px; font-size:12px; font-weight:700;"></span>
+    </div>
   </div>
+
+  <!-- 01 這是什麼 -->
+  <section style="margin-bottom:48px;">
+    <div style="display:flex; align-items:center; gap:14px; margin-bottom:16px;">
+      <span style="font-family:'Space Grotesk',monospace; font-size:16px; font-weight:700; background:#FFD94A; border:2px solid #191919; box-shadow:3px 3px 0 #191919; padding:3px 13px;">01</span>
+      <h2 data-t="s1_title" style="font-size:23px; font-weight:900; margin:0;"></h2>
+    </div>
+    <p data-t="s1_desc" style="margin:0 0 18px 0; font-size:14.5px; color:#44403A;"></p>
+    <div style="display:grid; grid-template-columns:1fr auto 1fr; gap:16px; align-items:stretch;">
+      <div style="background:#FFFFFF; border:2px solid #191919; padding:18px 22px;">
+        <div data-t="s1_before_label" style="font-size:11px; font-weight:700; letter-spacing:2px; color:#8A857C; margin-bottom:8px;"></div>
+        <div style="font-size:19px; font-weight:700; line-height:1.45; color:#6E6A63;"><span data-t="s1_before_l1"></span><br><span data-t="s1_before_l2"></span></div>
+      </div>
+      <div style="display:flex; align-items:center; justify-content:center; font-size:26px; font-weight:700;">→</div>
+      <div style="background:#191919; border:2px solid #191919; box-shadow:5px 5px 0 #FFD94A; padding:18px 22px; color:#FFFFFF;">
+        <div data-t="s1_after_label" style="font-size:11px; font-weight:700; letter-spacing:2px; color:#FFD94A; margin-bottom:8px;"></div>
+        <div id="s1afterval" style="font-size:19px; font-weight:700; line-height:1.45;"></div>
+        <div data-t="s1_after_badge" style="display:inline-block; margin-top:8px; background:#FFD94A; color:#191919; font-size:12px; font-weight:900; padding:2px 10px;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 基本操作 -->
+  <section style="margin-bottom:48px;">
+    <div style="display:flex; align-items:center; gap:14px; margin-bottom:16px;">
+      <span style="font-family:'Space Grotesk',monospace; font-size:16px; font-weight:700; background:#FFD94A; border:2px solid #191919; box-shadow:3px 3px 0 #191919; padding:3px 13px;">02</span>
+      <h2 data-t="s2_title" style="font-size:23px; font-weight:900; margin:0;"></h2>
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:12px;">
+      <div style="background:#FFFFFF; border:2px solid #191919; padding:16px 8px; display:flex; flex-direction:column; align-items:center; gap:10px; text-align:center;">
+        <span data-t="op1_key" style="font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600; background:#FFF7DB; border:2px solid #191919; border-bottom-width:5px; padding:6px 9px; white-space:nowrap;"></span>
+        <div data-t="op1_desc" style="font-size:12.5px; font-weight:700; line-height:1.4;"></div>
+      </div>
+      <div style="background:#FFFFFF; border:2px solid #191919; padding:16px 8px; display:flex; flex-direction:column; align-items:center; gap:10px; text-align:center;">
+        <span data-t="op2_key" style="font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600; background:#FFF7DB; border:2px solid #191919; border-bottom-width:5px; padding:6px 9px; white-space:nowrap;"></span>
+        <div id="op2desc" style="font-size:12.5px; font-weight:700; line-height:1.4;"></div>
+      </div>
+      <div style="background:#FFFFFF; border:2px solid #191919; padding:16px 8px; display:flex; flex-direction:column; align-items:center; gap:10px; text-align:center;">
+        <span data-t="op3_key" style="font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600; background:#FFF7DB; border:2px solid #191919; border-bottom-width:5px; padding:6px 12px; min-width:44px;"></span>
+        <div data-t="op3_desc" style="font-size:12.5px; font-weight:700; line-height:1.4;"></div>
+      </div>
+      <div style="background:#FFFFFF; border:2px solid #191919; padding:16px 8px; display:flex; flex-direction:column; align-items:center; gap:10px; text-align:center;">
+        <span data-t="op4_key" style="font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600; background:#FFF7DB; border:2px solid #191919; border-bottom-width:5px; padding:6px 12px; min-width:44px;"></span>
+        <div data-t="op4_desc" style="font-size:12.5px; font-weight:700; line-height:1.4;"></div>
+      </div>
+      <div style="background:#FFFFFF; border:2px solid #191919; padding:16px 8px; display:flex; flex-direction:column; align-items:center; gap:10px; text-align:center;">
+        <span data-t="op5_key" style="font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600; background:#FFF7DB; border:2px solid #191919; border-bottom-width:5px; padding:6px 12px; min-width:44px;"></span>
+        <div data-t="op5_desc" style="font-size:12.5px; font-weight:700; line-height:1.4;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 四種功能 -->
+  <section style="margin-bottom:48px;">
+    <div style="display:flex; align-items:center; gap:14px; margin-bottom:16px;">
+      <span style="font-family:'Space Grotesk',monospace; font-size:16px; font-weight:700; background:#FFD94A; border:2px solid #191919; box-shadow:3px 3px 0 #191919; padding:3px 13px;">03</span>
+      <h2 data-t="s3_title" style="font-size:23px; font-weight:900; margin:0;"></h2>
+    </div>
+
+    <!-- 功能 1 -->
+    <div style="background:#FFFFFF; border:2px solid #191919; box-shadow:5px 5px 0 #191919; padding:22px 24px; margin-bottom:26px;">
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+        <div style="width:32px; height:32px; background:#FFD94A; border:2px solid #191919; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-family:'Space Grotesk',monospace; font-size:16px; font-weight:700; flex-shrink:0;">1</div>
+        <div data-t="fn1_name" style="font-size:18px; font-weight:900;"></div>
+        <div data-t="fn1_tag" style="font-size:12.5px; color:#6E6A63; background:linear-gradient(transparent 55%, #FFEEA8 55%); padding:0 4px; font-weight:500;"></div>
+      </div>
+      <ol style="margin:8px 0 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:7px;">
+        <li style="display:flex; gap:10px; align-items:baseline;"><span style="width:20px; height:20px; background:#191919; color:#FFD94A; border-radius:50%; font-size:11px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; transform:translateY(3px);">1</span><span data-t="fn1_step1"></span></li>
+        <li style="display:flex; gap:10px; align-items:baseline;"><span style="width:20px; height:20px; background:#191919; color:#FFD94A; border-radius:50%; font-size:11px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; transform:translateY(3px);">2</span><span id="fn1s2"></span></li>
+        <li style="display:flex; gap:10px; align-items:baseline;"><span style="width:20px; height:20px; background:#191919; color:#FFD94A; border-radius:50%; font-size:11px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; transform:translateY(3px);">3</span><span data-t="fn1_step3"></span></li>
+      </ol>
+      <div style="margin-top:12px; background:#FFF7DB; border:2px solid #191919; padding:8px 14px; font-size:12.5px; color:#44403A; display:flex; gap:10px; align-items:baseline;">
+        <span data-t="fn1_tip_label" style="background:#191919; color:#FFD94A; font-size:11px; font-weight:700; padding:1px 8px; flex-shrink:0; transform:translateY(-1px);"></span>
+        <span data-t="fn1_tip"></span>
+      </div>
+      <div data-video style="margin-top:14px;">
+        <div data-t="video_label" style="font-size:12px; font-weight:700; color:#6E6A63; margin-bottom:6px;"></div>
+        <div style="border:2px solid #191919; background:#000; max-height:360px; overflow:hidden;">
+          <video controls playsinline preload="metadata" src="查詢單筆-操作錄影.mp4" style="width:100%; height:auto; max-height:356px; display:block; object-fit:contain;"></video>
+        </div>
+      </div>
+    </div>
+
+    <!-- 功能 2 -->
+    <div style="background:#FFFFFF; border:2px solid #191919; box-shadow:5px 5px 0 #191919; padding:22px 24px; margin-bottom:26px;">
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+        <div style="width:32px; height:32px; background:#FFD94A; border:2px solid #191919; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-family:'Space Grotesk',monospace; font-size:16px; font-weight:700; flex-shrink:0;">2</div>
+        <div data-t="fn2_name" style="font-size:18px; font-weight:900;"></div>
+        <div data-t="fn2_tag" style="font-size:12.5px; color:#6E6A63; background:linear-gradient(transparent 55%, #FFEEA8 55%); padding:0 4px; font-weight:500;"></div>
+      </div>
+      <ol style="margin:8px 0 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:7px;">
+        <li style="display:flex; gap:10px; align-items:baseline;"><span style="width:20px; height:20px; background:#191919; color:#FFD94A; border-radius:50%; font-size:11px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; transform:translateY(3px);">1</span><span data-t="fn2_step1"></span></li>
+        <li style="display:flex; gap:10px; align-items:baseline;"><span style="width:20px; height:20px; background:#191919; color:#FFD94A; border-radius:50%; font-size:11px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; transform:translateY(3px);">2</span><span id="fn2s2"></span></li>
+        <li style="display:flex; gap:10px; align-items:baseline;"><span style="width:20px; height:20px; background:#191919; color:#FFD94A; border-radius:50%; font-size:11px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; transform:translateY(3px);">3</span><span data-t="fn2_step3"></span></li>
+      </ol>
+      <div style="margin-top:12px; background:#FFF7DB; border:2px solid #191919; padding:8px 14px; font-size:12.5px; color:#44403A; display:flex; gap:10px; align-items:baseline;">
+        <span data-t="fn2_tip_label" style="background:#191919; color:#FFD94A; font-size:11px; font-weight:700; padding:1px 8px; flex-shrink:0; transform:translateY(-1px);"></span>
+        <span data-t="fn2_tip"></span>
+      </div>
+      <div data-video style="margin-top:14px;">
+        <div data-t="video_label" style="font-size:12px; font-weight:700; color:#6E6A63; margin-bottom:6px;"></div>
+        <div style="border:2px solid #191919; background:#000; max-height:360px; overflow:hidden;">
+          <video controls playsinline preload="metadata" src="更新申報狀態-操作錄影.mp4" style="width:100%; height:auto; max-height:356px; display:block; object-fit:contain;"></video>
+        </div>
+      </div>
+    </div>
+
+    <!-- 功能 3 -->
+    <div style="background:#FFFFFF; border:2px solid #191919; box-shadow:5px 5px 0 #191919; padding:22px 24px; margin-bottom:26px;">
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px; flex-wrap:wrap;">
+        <div style="width:32px; height:32px; background:#FFD94A; border:2px solid #191919; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-family:'Space Grotesk',monospace; font-size:16px; font-weight:700; flex-shrink:0;">3</div>
+        <div data-t="fn3_name" style="font-size:18px; font-weight:900;"></div>
+        <div data-t="fn3_tag" style="font-size:12.5px; color:#6E6A63; background:linear-gradient(transparent 55%, #FFEEA8 55%); padding:0 4px; font-weight:500;"></div>
+      </div>
+      <ol style="margin:8px 0 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:7px;">
+        <li style="display:flex; gap:10px; align-items:baseline;"><span style="width:20px; height:20px; background:#191919; color:#FFD94A; border-radius:50%; font-size:11px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; transform:translateY(3px);">1</span><span data-t="fn3_step1"></span></li>
+        <li style="display:flex; gap:10px; align-items:baseline;"><span style="width:20px; height:20px; background:#191919; color:#FFD94A; border-radius:50%; font-size:11px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; transform:translateY(3px);">2</span><span id="fn3s2"></span></li>
+        <li style="display:flex; gap:10px; align-items:baseline;"><span style="width:20px; height:20px; background:#191919; color:#FFD94A; border-radius:50%; font-size:11px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; transform:translateY(3px);">3</span><span data-t="fn3_step3"></span></li>
+        <li style="display:flex; gap:10px; align-items:baseline;"><span style="width:20px; height:20px; background:#191919; color:#FFD94A; border-radius:50%; font-size:11px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; transform:translateY(3px);">4</span><span data-t="fn3_step4"></span></li>
+      </ol>
+      <div style="margin-top:12px; background:#FFF7DB; border:2px solid #191919; padding:8px 14px; font-size:12.5px; color:#44403A; display:flex; gap:10px; align-items:baseline;">
+        <span data-t="fn3_tip_label" style="background:#191919; color:#FFD94A; font-size:11px; font-weight:700; padding:1px 8px; flex-shrink:0; transform:translateY(-1px);"></span>
+        <span data-t="fn3_tip"></span>
+      </div>
+      <div data-video style="margin-top:14px;">
+        <div data-t="video_label" style="font-size:12px; font-weight:700; color:#6E6A63; margin-bottom:6px;"></div>
+        <div style="border:2px solid #191919; background:#000; max-height:360px; overflow:hidden;">
+          <video controls playsinline preload="metadata" src="標記YN與分配人員-操作錄影.mp4" style="width:100%; height:auto; max-height:356px; display:block; object-fit:contain;"></video>
+        </div>
+      </div>
+    </div>
+
+    <!-- 重要警告 -->
+    <div style="background:#191919; color:#FFFFFF; border:2px solid #191919; box-shadow:5px 5px 0 #FFD94A; padding:16px 22px; margin-bottom:26px; display:flex; gap:14px; align-items:baseline; font-size:13.5px; line-height:1.7;">
+      <span data-t="warn_label" style="background:#FFD94A; color:#191919; font-size:12px; font-weight:900; padding:2px 10px; flex-shrink:0; letter-spacing:1px;"></span>
+      <span id="warntext"></span>
+    </div>
+
+    <!-- 功能 4 -->
+    <div style="background:#FFFFFF; border:2px solid #191919; box-shadow:5px 5px 0 #191919; padding:22px 24px;">
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px; flex-wrap:wrap;">
+        <div style="width:32px; height:32px; background:#FFD94A; border:2px solid #191919; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-family:'Space Grotesk',monospace; font-size:16px; font-weight:700; flex-shrink:0;">4</div>
+        <div data-t="fn4_name" style="font-size:18px; font-weight:900;"></div>
+        <div data-t="fn4_tag" style="font-size:12.5px; color:#6E6A63; background:linear-gradient(transparent 55%, #FFEEA8 55%); padding:0 4px; font-weight:500;"></div>
+      </div>
+      <ol style="margin:8px 0 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:7px;">
+        <li style="display:flex; gap:10px; align-items:baseline;"><span style="width:20px; height:20px; background:#191919; color:#FFD94A; border-radius:50%; font-size:11px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; transform:translateY(3px);">1</span><span data-t="fn4_step1"></span></li>
+        <li style="display:flex; gap:10px; align-items:baseline;"><span style="width:20px; height:20px; background:#191919; color:#FFD94A; border-radius:50%; font-size:11px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; transform:translateY(3px);">2</span><span id="fn4s2"></span></li>
+        <li style="display:flex; gap:10px; align-items:baseline;"><span style="width:20px; height:20px; background:#191919; color:#FFD94A; border-radius:50%; font-size:11px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; transform:translateY(3px);">3</span><span data-t="fn4_step3"></span></li>
+      </ol>
+      <div data-video style="margin-top:14px;">
+        <div data-t="video_label4" style="font-size:12px; font-weight:700; color:#6E6A63; margin-bottom:6px;"></div>
+        <div style="border:2px solid #191919; background:#000; max-height:360px; overflow:hidden;">
+          <video controls playsinline preload="metadata" src="標記重複資料-操作錄影.mp4" style="width:100%; height:auto; max-height:356px; display:block; object-fit:contain;"></video>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 如何安裝 -->
+  <section style="margin-bottom:48px;">
+    <div style="display:flex; align-items:center; gap:14px; margin-bottom:16px;">
+      <span style="font-family:'Space Grotesk',monospace; font-size:16px; font-weight:700; background:#FFD94A; border:2px solid #191919; box-shadow:3px 3px 0 #191919; padding:3px 13px;">04</span>
+      <h2 data-t="s4_title" style="font-size:23px; font-weight:900; margin:0;"></h2>
+    </div>
+    <div style="display:flex; align-items:center; gap:16px; background:#FFFFFF; border:2px solid #191919; padding:18px 24px;">
+      <div style="flex:1; display:flex; align-items:center; gap:12px;">
+        <span style="width:26px; height:26px; background:#FFD94A; border:2px solid #191919; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-family:'Space Grotesk',monospace; font-size:13px; font-weight:700; flex-shrink:0;">1</span>
+        <span id="inst1" style="font-size:13.5px;"></span>
+      </div>
+      <div style="font-size:20px; font-weight:700; flex-shrink:0;">→</div>
+      <div style="flex:1; display:flex; align-items:center; gap:12px;">
+        <span style="width:26px; height:26px; background:#FFD94A; border:2px solid #191919; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-family:'Space Grotesk',monospace; font-size:13px; font-weight:700; flex-shrink:0;">2</span>
+        <span id="inst2" style="font-size:13.5px;"></span>
+      </div>
+    </div>
+    <div style="margin-top:12px; background:#FFF7DB; border:2px solid #191919; padding:8px 14px; font-size:12.5px; color:#44403A; display:flex; gap:10px; align-items:baseline;">
+      <span data-t="update_label" style="background:#191919; color:#FFD94A; font-size:11px; font-weight:700; padding:1px 8px; flex-shrink:0; transform:translateY(-1px);"></span>
+      <span id="updtext"></span>
+    </div>
+  </section>
+
+  <!-- 05 常見問題 -->
+  <section style="margin-bottom:48px;">
+    <div style="display:flex; align-items:center; gap:14px; margin-bottom:16px;">
+      <span style="font-family:'Space Grotesk',monospace; font-size:16px; font-weight:700; background:#FFD94A; border:2px solid #191919; box-shadow:3px 3px 0 #191919; padding:3px 13px;">05</span>
+      <h2 data-t="s5_title" style="font-size:23px; font-weight:900; margin:0;"></h2>
+    </div>
+    <div id="faqWrap" style="display:grid; grid-template-columns:1fr 1fr; gap:16px;"></div>
+  </section>
+
+  <!-- 06 錯誤訊息對照表 -->
+  <section style="margin-bottom:48px;">
+    <div style="display:flex; align-items:center; gap:14px; margin-bottom:16px;">
+      <span style="font-family:'Space Grotesk',monospace; font-size:16px; font-weight:700; background:#FFD94A; border:2px solid #191919; box-shadow:3px 3px 0 #191919; padding:3px 13px;">06</span>
+      <h2 data-t="s6_title" style="font-size:23px; font-weight:900; margin:0;"></h2>
+    </div>
+    <table style="width:100%; border-collapse:collapse; border:2px solid #191919; background:#FFFFFF; font-size:13px;">
+      <thead>
+        <tr>
+          <th data-t="err_head_msg" style="background:#191919; color:#FFD94A; text-align:left; padding:10px 16px; font-size:12.5px; letter-spacing:1px; width:36%;"></th>
+          <th data-t="err_head_fix" style="background:#191919; color:#FFFFFF; text-align:left; padding:10px 16px; font-size:12.5px; letter-spacing:1px;"></th>
+        </tr>
+      </thead>
+      <tbody id="errBody"></tbody>
+    </table>
+  </section>
+
+  <div data-t="footer" style="border-top:2px solid #191919; padding-top:14px; text-align:center; font-size:11.5px; color:#8A857C;"></div>
 </div>
 
+<script>
+/* ══════════════════════════════════════════════════════════════
+   ▼▼▼  所有可修改的顯示文字都集中在這裡  ▼▼▼
+   只要改這個區塊的文字就好，上方版面完全不用動。
+   規則：
+   1) 引號 " " 之間才是要改的文字，冒號左邊的名稱（key）請勿更動。
+   2) 每行結尾的逗號要保留。
+   3) 文字裡若要用到 " 半形雙引號，請改用 「」 或 『』，以免破壞語法。
+   ══════════════════════════════════════════════════════════════ */
+const T = {
 
-<!-- ════════════════ 01 這是什麼？ ════════════════ -->
-<section>
-  <h2><span class="num">01</span>這是什麼？</h2>
-  <p class="lead">
-    ACS 台北站一位清關作業人員，為了工作方便與提升效率，設計了這款自動化處理清關報告資料的程式。此程式由 AutoHotKey 語言編寫，並串連雲端 Google Apps Script 處理表單資料修改。安裝在電腦上即可使用。
-  </p>
+  /* ── 影片：要不要顯示操作影片區塊（true 顯示 / false 隱藏）── */
+  SHOW_VIDEOS: true,
 
-  <div class="compare">
-    <div class="compare-card before">
-      <div class="label">以往人工</div>
-      <div class="figure">3 分鐘<br>處理 <b>8 筆</b>資料</div>
-    </div>
-    <div class="compare-arrow">→</div>
-    <div class="compare-card after">
-      <div class="label">配合清關報告幫手</div>
-      <div class="figure">3 分鐘<br>處理 <b>100 筆</b>資料</div>
-      <div class="boost">效率 ✕ 12.5</div>
-    </div>
-  </div>
-</section>
+  /* ── 封面 ────────────────────────────── */
+  cover_badge:    "使用說明",
+  cover_title:    "清關報告幫手",
+  cover_subtitle: "一個簡化清關表單作業的自動化腳本",
+  cover_tag1:     "適用：ACS 清關作業人員",
+  cover_tag2:     "程式版本 v1.2.0",
 
+  /* ── 各章節大標題 ─────────────────────── */
+  s1_title: "這是什麼？",
+  s2_title: "基本操作",
+  s3_title: "四種功能",
+  s4_title: "如何安裝？",
+  s5_title: "常見問題",
+  s6_title: "錯誤訊息對照表",
+  s7_title: "回報問題或提出構想",
 
-<!-- ════════════════ 02 基本操作 ════════════════ -->
-<section>
-  <h2><span class="num">02</span>基本操作</h2>
-  <div class="keys-grid">
-    <div class="key-card">
-      <span class="keycap">🖱 左鍵雙擊</span>
-      <div class="desc">雙擊程式以啟動</div>
-    </div>
-    <div class="key-card">
-      <span class="keycap">🖱 右鍵長按</span>
-      <div class="desc">叫出功能選單<br><small style="font-weight:400;color:var(--text-muted);">長按 0.3 秒</small></div>
-    </div>
-    <div class="key-card">
-      <span class="keycap">Esc</span>
-      <div class="desc">暫停 / 恢復運作</div>
-    </div>
-    <div class="key-card">
-      <span class="keycap">F8</span>
-      <div class="desc">關閉程式</div>
-    </div>
-    <div class="key-card">
-      <span class="keycap">F9</span>
-      <div class="desc">檢查並更新程式</div>
-    </div>
-  </div>
-</section>
+  /* ── 01 這是什麼 ──────────────────────── */
+  s1_desc:         "為了工作方便與提升效率，一位清關表單的作業人員設計了這款自動化處理資料的腳本。此程式主要由 AHK v2 語言建立，配合 GAS 修改表單資料。安裝在電腦上即可使用。",
+  s1_before_label: "以往人工",
+  s1_before_l1:    "3 分鐘",
+  s1_before_l2:    "處理 8 筆資料",
+  s1_after_label:  "配合清關報告幫手",
+  s1_after_l1:     "3 分鐘",
+  s1_after_pre:    "處理 ",     /* 黃色數字前面的字 */
+  s1_after_hl:     "100 筆",    /* 黃色反白的數字 */
+  s1_after_post:   "資料",      /* 黃色數字後面的字 */
+  s1_after_badge:  "效率 × 12.5",
 
+  /* ── 02 基本操作（5 個按鍵）───────────── */
+  op1_key: "🖱 左鍵雙擊", op1_desc: "雙擊程式以啟動",
+  op2_key: "🖱 右鍵長按", op2_desc: "叫出功能選單", op2_sub: "長按 0.3 秒",
+  op3_key: "Esc",         op3_desc: "暫停 / 恢復運作",
+  op4_key: "F8",          op4_desc: "關閉程式",
+  op5_key: "F9",          op5_desc: "檢查並更新程式",
 
-<!-- ════════════════ 03 四種功能使用說明 ════════════════ -->
-<section>
-  <h2><span class="num">03</span>四種功能使用說明</h2>
+  /* ── 03 四種功能：步驟共用文字 ─────────── */
+  /* 4 種功能的第 2 步都會用到，改一次全部套用 */
+  menu_pick_pre:  "長按右鍵叫出選單，點選「",
+  menu_pick_post: "」",
+  video_label:    "▶ 操作影片",
+  video_label4:   "▶ 操作影片",
 
-  <!-- 1. 查詢單筆 -->
-  <div class="func-card">
-    <div class="head">
-      <div class="icon">1</div>
-      <div class="name">查詢單筆</div>
-    </div>
-    <div class="use-case">想快速查看某一單的 EZWAY 狀態。</div>
-    <ol class="steps">
-      <li>選取你要查詢的單號（只能一筆）</li>
-      <li>長按右鍵叫出選單，點選「<b>查詢單筆</b>」</li>
-      <li>交給程式完成後續查詢動作</li>
-    </ol>
-    <div class="note">
-      <b>提示　</b>單號可以從清關報告、聊天訊息或哲盟系統中選取，來源無所謂
-    </div>
-    <div class="video-block">
-      <div class="video-caption">操作示範影片</div>
-      <div class="video-container">
-        <video controls playsinline preload="metadata">
-          <source src="查詢單筆-操作錄影.mp4" type="video/mp4">
-          您的瀏覽器不支援影片播放功能。
-        </video>
-      </div>
-    </div>
-  </div>
+  /* ── 03 功能 1：查詢單筆 ──────────────── */
+  fn1_name:      "查詢單筆",  /* 功能名稱：標題與第 2 步會同步套用 */
+  fn1_tag:       "想快速查看某一單的 EZWAY 資料",
+  fn1_step1:     "選取你要查詢的單號（只能一筆）",
+  fn1_step3:     "程式會完成後續查詢動作",
+  fn1_tip_label: "提示",
+  fn1_tip:       "單號不只可以從清關報告表單選取，也可以從 Line、哲盟、Excel 等其他地方選取",
 
-  <!-- 2. 更新申報狀態 -->
-  <div class="func-card">
-    <div class="head">
-      <div class="icon">2</div>
-      <div class="name">更新申報狀態</div>
-    </div>
-    <div class="use-case">確實記錄申報狀態以避免誤打電話、透過統計報告了解名單變化。</div>
-    <ol class="steps">
-      <li>在清關報告 E 欄框選你要執行的單號（單一筆到數百筆都可）</li>
-      <li>長按右鍵叫出選單，點選「<b>更新申報狀態</b>」</li>
-      <li>交給程式完成後續查詢與修改動作</li>
-      <li>完成後會跳出統計報告</li>
-    </ol>
-    <div class="note">
-      <b>提醒　</b>程式只會偵測到「已按申報相符」及「已上傳個案委任書」這兩種狀態，所以也只會改成這兩種狀態
-    </div>
-    <div class="video-block">
-      <div class="video-caption">操作示範影片</div>
-      <div class="video-container">
-        <video controls playsinline preload="metadata">
-          <source src="更新申報狀態-操作錄影.mp4" type="video/mp4">
-          您的瀏覽器不支援影片播放功能。
-        </video>
-      </div>
-    </div>
-  </div>
+  /* ── 03 功能 2：更新申報狀態 ──────────── */
+  fn2_name:      "更新申報狀態",
+  fn2_tag:       "更新申報狀態以避免誤打電話",
+  fn2_step1:     "在清關報告 E 欄框選你要執行的單號（一筆到數百筆皆可）",
+  fn2_step3:     "程式會完成後續查詢與修改動作，並顯示統計報告",
+  fn2_tip_label: "提醒",
+  fn2_tip:       "程式只能偵測「已按申報相符」及「已上傳個案委任書」兩種狀態，其他的偵測不到也不會做修改",
 
-  <!-- 3. 標記 Y/N 與分配人員 -->
-  <div class="func-card">
-    <div class="head">
-      <div class="icon">3</div>
-      <div class="name">標記 Y/N 與分配人員</div>
-    </div>
-    <div class="use-case">標記客戶的 EZWAY 實名認證比對結果（所謂 Y 和 N）、每天為作業人員分配清關報告資料時。</div>
-    <ol class="steps">
-      <li>在清關報告 E 欄框選你要執行的單號（單一筆到數百筆都可）</li>
-      <li>長按右鍵叫出選單，點選「<b>標記 Y/N 與分配人員</b>」</li>
-      <li>在提示框填入人員名稱，中間用空格或逗號隔開（若不需分配人員，可以留空，即只會標記 Y/N）</li>
-      <li>交給程式完成後續查詢與標記動作</li>
-    </ol>
-    <div class="note">
-      <b>提示　</b>1. 此功能也有「更新申報狀態」的功能 ； 2. 「已按申報相符」及「已上傳個案委任書」的資料不會分配人員，因為已結案無需人員作業
-    </div>
-    <div class="video-block">
-      <div class="video-caption">操作示範影片</div>
-      <div class="video-container">
-        <video controls playsinline preload="metadata">
-          <source src="標記YN與分配人員-操作錄影.mp4" type="video/mp4">
-          您的瀏覽器不支援影片播放功能。
-        </video>
-      </div>
-    </div>
-  </div>
+  /* ── 03 功能 3：標記 Y/N 與分配人員 ────── */
+  fn3_name:      "標記 Y/N 與分配人員",
+  fn3_tag:       "標記 EZWAY 實名認證比對結果 + 標記處理人員",
+  fn3_step1:     "在清關報告 E 欄框選你要執行的單號（一筆到數百筆皆可）",
+  fn3_step3:     "在跳出的對話框填入人員（用空格或逗號分隔），若無需分配人員可以留空",
+  fn3_step4:     "程式會完成後續查詢與標記動作",
+  fn3_tip_label: "提示",
+  fn3_tip:       "1. 此功能同時有「更新申報狀態」的效果；2. 「已按申報相符」及「已上傳個案委任書」的資料不會標記處理人員",
 
-  <div class="note strong">
-    <b>⚠　</b>使用「查詢單筆」、「更新申報狀態」和「標記 Y/N 與分配人員」三種功能前，<b>請先確保「ACS-EXP 物流管理系統」網頁已開啟且已登入</b>。安全起見沒有設定讓程式自動登入。
-  </div>
+  /* ── 03 重要警告（黑底）───────────────── */
+  warn_label: "重要",
+  warn_pre:   "使用「查詢單筆」、「更新申報狀態」和「標記 Y/N 與分配人員」三種功能前，",
+  warn_bold:  "需先登入「ACS-EXP 物流管理系統」網頁",  /* 黃色粗體 */
+  warn_post:  "，腳本不會自動登入。",
 
-  <!-- 4. 標記重複資料 -->
-  <div class="func-card">
-    <div class="head">
-      <div class="icon">4</div>
-      <div class="name">標記重複資料</div>
-    </div>
-    <div class="use-case">標記重複出現過的客戶，從之前的處理紀錄了解客戶狀況。</div>
-    <ol class="steps">
-      <li>在清關報告中框選你要標記重複的資料（單一筆到數百筆都可）</li>
-      <li>長按右鍵叫出選單，點選「<b>標記重複資料</b>」</li>
-      <li>交給程式完成後續標記動作</li>
-    </ol>
-    <div class="video-block">
-      <div class="video-caption">操作示範影片</div>
-      <div class="video-container">
-        <video controls playsinline preload="metadata">
-          <source src="標記重複資料-操作錄影.mp4" type="video/mp4">
-          您的瀏覽器不支援影片播放功能。
-        </video>
-      </div>
-    </div>
-  </div>
-</section>
+  /* ── 03 功能 4：標記重複資料 ──────────── */
+  fn4_name:  "標記重複資料",
+  fn4_tag:   "可從重複客戶的舊資料複製中文名，不用重複致電詢問",
+  fn4_step1: "在清關報告中框選你要標記重複的資料（一筆到數百筆皆可）",
+  fn4_step3: "程式會完成後續標記動作",
 
+  /* ── 04 如何安裝 ──────────────────────── */
+  exe_name:      "清關報告幫手.exe",  /* 檔名：安裝步驟 1、2 會同步套用 */
+  install1_pre:  "取得",  install1_post: "放在桌面",
+  install2_pre:  "雙擊桌面", install2_post: "開啟程式",
+  update_label:  "檢查更新",
+  update_pre:    "建議偶爾按一下", update_key: "F9", update_post: "檢查更新",
 
-<!-- ════════════════ 04 如何安裝？ ════════════════ -->
-<section>
-  <h2><span class="num">04</span>如何安裝？</h2>
+  /* ── 06 錯誤訊息表：兩欄標題 ──────────── */
+  err_head_msg: "錯誤訊息",
+  err_head_fix: "應對方式",
 
-  <div class="install-row">
-    <div class="install-step">
-      <div class="step-num">1</div>
-      <div class="step-text">取得 <span class="code">清關報告幫手.exe</span> 放在桌面</div>
-    </div>
-    <div class="install-arrow">→</div>
-    <div class="install-step">
-      <div class="step-num">2</div>
-      <div class="step-text">雙擊桌面 <span class="code">清關報告幫手.exe</span> 開啟程式</div>
-    </div>
-  </div>
-  <div class="note">
-    <b>檢查更新　</b>建議偶爾按一下 <span class="code">F9</span> 檢查更新
-  </div>
-</section>
+  /* ── 頁尾 ─────────────────────────────── */
+  footer: "© 蘇宗彥 · ACS 台北站"
+};
 
+/* ── 05 常見問題（可自由增減，一組 { q, a } 是一題）── */
+const faqs = [
+  { q: "我可以在清關報告以外的其他表單中使用這個程式嗎？", a: "只有「查詢單筆」功能可以，其他三種功能不行。因為更改表單資料仰賴表單後台的 GAS 程式碼，其他表單並沒有設定好程式碼。" },
+  { q: "程式運行過程中，我可以操作電腦做其他事嗎？", a: "在程式查詢資料的階段，滑鼠會轉圈，此時不能操作電腦。在修改表單資料的階段，滑鼠游標恢復正常，此時可以。想中途做其他事可以按 Esc 暫停，回到暫停時的畫面再次按下 Esc 即可恢復運行。" },
+  { q: "我在清關報告裡所備註的文字，會被程式修改或覆蓋嗎？", a: "不會。「更新申報狀態」功能只會修改 K 欄下拉選單的選項。「標記 Y/N 與分配人員」會把文字新增在 L 欄原有文字的最前面。" },
+  { q: "客戶電話中說他已按申報相符，為什麼「更新申報狀態」功能沒有更新到？", a: "因為「ACS-EXP 物流管理系統」網頁中沒有看到已按申報相符的關鍵字「00:資料相符」。" }
+];
 
-<!-- ════════════════ 05 常見問題 ════════════════ -->
-<section>
-  <h2><span class="num">05</span>常見問題</h2>
+/* ── 06 錯誤訊息對照表（可自由增減，一組 [訊息, 應對方式] 是一列）── */
+const errorRows = [
+  ["沒有偵測到你要執行的單號", "重新選取你的單號再執行一次。如果單號在表單中（如清關報告），請選取它的格子，或全選其文字。"],
+  ["找不到「物流管理系統」的網頁", "在 Chrome 或 Edge 瀏覽器中開啟「ACS-EXP 物流管理系統」網頁並登入，再執行一次。"],
+  ["「物流管理系統」網頁異常", "人工操作「物流管理系統」網頁並確定沒問題後，再執行一次。"],
+  ["清關報告內沒有看到你所執行的單號", "人工找尋你剛剛執行的單號，確定單號存在後再執行一次。"],
+  ["清關報告的雲端指令碼沒有回應", "表單後台 GAS 異常。再執行一次。持續失敗請聯繫作者。"],
+  ["這個功能只可以在清關報告中使用", "若資料不在清關報告中，只能人工操作。若資料在清關報告中，切換到清關報告頁面，再執行一次。"],
+  ["單號好像不對", "你的單號太短，請確定單號無誤再執行一次。"],
+  ["這可能超過了腳本的能力範圍", "發生未預期錯誤。再執行一次。持續失敗請聯繫作者。"],
+  ["執行更新時的各式錯誤訊息", "程式自動更新失敗。再按一次 F9 重試。持續失敗請聯繫作者。"]
+];
 
-  <div class="faq">
-    <div class="faq-item">
-      <div class="faq-q">我可以在清關報告以外的其他表單中使用這個程式嗎？</div>
-      <div class="faq-a">只有「查詢單筆」功能可以，其他三種功能不行。因為更改表單資料的步驟仰賴表單後台的 GAS 程式碼，其他表單並沒有設定好程式碼，也沒有跟程式串接。</div>
-    </div>
+/* ▲▲▲  可修改文字到此結束，以下是套用程式，請勿更動  ▲▲▲ */
 
-    <div class="faq-item">
-      <div class="faq-q">程式運行過程中，我可以操作電腦做其他事嗎？</div>
-      <div class="faq-a">在程式查詢資料的階段，滑鼠會轉圈，此時不能操作電腦。在修改表單資料的階段，滑鼠游標恢復正常，此時可以。想中途做其他事可以按 Esc 暫停，恢復運行前記得回到暫停時的頁面。</div>
-    </div>
+(function () {
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  function byId(id){ return document.getElementById(id); }
 
-    <div class="faq-item">
-      <div class="faq-q">如果我執行的十筆單號中有一筆是亂碼，程式會如何處理？</div>
-      <div class="faq-a">會自動跳過那筆亂碼，繼續下一筆查詢。如果十筆全是亂碼，程式會全部跳過，但依然會走一遍更新表單資料的形式。</div>
-    </div>
+  /* 1) 純文字：填入所有 data-t 元素 */
+  document.querySelectorAll("[data-t]").forEach(function(el){
+    var k = el.getAttribute("data-t");
+    if (T[k] != null) el.textContent = T[k];
+  });
 
-    <div class="faq-item">
-      <div class="faq-q">修改表單資料的階段會需要跑多久？</div>
-      <div class="faq-a">取決於清關報告 POA 工作表裡的數據量，越龐大的表單要跑越久，因為程式會先掃描整張表單找出剛剛執行的單號，再進行修改。</div>
-    </div>
+  /* 2) 帶樣式的組合文字 */
+  byId("s1afterval").innerHTML =
+    esc(T.s1_after_l1) + "<br>" + esc(T.s1_after_pre) +
+    "<span style='color:#FFD94A;'>" + esc(T.s1_after_hl) + "</span>" + esc(T.s1_after_post);
 
-    <div class="faq-item">
-      <div class="faq-q">我在清關報告裡所備註的文字，會被程式修改或覆蓋嗎？</div>
-      <div class="faq-a">不會。「更新申報狀態」只會修改 K 欄下拉選單的選項。「標記 Y/N 與分配人員」會把文字新增在 L 欄原有文字的最前面。</div>
-    </div>
+  byId("op2desc").innerHTML =
+    esc(T.op2_desc) + "<br><span style='font-weight:400; color:#8A857C; font-size:11px;'>" + esc(T.op2_sub) + "</span>";
 
-    <div class="faq-item">
-      <div class="faq-q">客戶電話中說他已按申報相符，為什麼「更新申報狀態」功能沒有更新到？</div>
-      <div class="faq-a">此程式在電腦前端運作，意即人工查不到的資料，它也查不到。你可以試著自己在「物流管理系統」中找尋客戶已按申報相符的證明，如果你有找到，但程式沒有更新，請聯繫作者改善程式。</div>
-    </div>
-  </div>
-</section>
+  function pickStep(name){
+    return esc(T.menu_pick_pre) + "<b>" + esc(name) + "</b>" + esc(T.menu_pick_post);
+  }
+  byId("fn1s2").innerHTML = pickStep(T.fn1_name);
+  byId("fn2s2").innerHTML = pickStep(T.fn2_name);
+  byId("fn3s2").innerHTML = pickStep(T.fn3_name);
+  byId("fn4s2").innerHTML = pickStep(T.fn4_name);
 
+  byId("warntext").innerHTML =
+    esc(T.warn_pre) + "<b style='color:#FFD94A;'>" + esc(T.warn_bold) + "</b>" + esc(T.warn_post);
 
-<!-- ════════════════ 06 錯誤訊息對照表 ════════════════ -->
-<section>
-  <h2><span class="num">06</span>錯誤訊息對照表</h2>
-  <table>
-    <thead>
-      <tr>
-        <th style="width:36%">錯誤訊息</th>
-        <th>應對方式</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td class="err-msg">沒有偵測到你要執行的單號</td>
-        <td>重新選取你的單號再執行一次。如果單號在表單中（如清關報告），請選取它的格子，或全選其文字。</td>
-      </tr>
-      <tr>
-        <td class="err-msg">找不到「物流管理系統」的網頁</td>
-        <td>在 Chrome 瀏覽器中開啟「ACS-EXP 物流管理系統」網頁並登入，再執行一次。</td>
-      </tr>
-      <tr>
-        <td class="err-msg">「物流管理系統」網頁異常</td>
-        <td>人工操作「物流管理系統」網頁並確定沒問題後，再執行一次。</td>
-      </tr>
-      <tr>
-        <td class="err-msg">清關報告內沒有看到你所執行的單號</td>
-        <td>人工找尋你剛剛執行的單號，確定單號存在後再執行一次。</td>
-      </tr>
-      <tr>
-        <td class="err-msg">清關報告的雲端指令碼沒有回應</td>
-        <td>再執行一次。持續失敗請聯繫作者。</td>
-      </tr>
-      <tr>
-        <td class="err-msg">這個功能只可以在清關報告中使用</td>
-        <td>若資料不在清關報告中，只能人工操作。若資料在清關報告中，切換到清關報告頁面，再執行一次。</td>
-      </tr>
-      <tr>
-        <td class="err-msg">單號好像不對</td>
-        <td>你的單號太短，請確定單號無誤再執行一次。</td>
-      </tr>
-      <tr>
-        <td class="err-msg">這可能超過了腳本的能力範圍</td>
-        <td>發生未預期錯誤。再執行一次。持續失敗請聯繫作者。</td>
-      </tr>
-      <tr>
-        <td class="err-msg generic">執行更新時的各式錯誤訊息</td>
-        <td>程式自動更新失敗。再按一次 <span class="code">F9</span> 重試。持續失敗請聯繫作者。</td>
-      </tr>
-    </tbody>
-  </table>
-</section>
+  var codeStyleY = "font-family:'IBM Plex Mono',monospace; font-size:12px; background:#FFF7DB; border:1px solid #191919; padding:1px 6px;";
+  var codeStyleW = "font-family:'IBM Plex Mono',monospace; font-size:12px; background:#FFFFFF; border:1px solid #191919; padding:1px 6px;";
+  byId("inst1").innerHTML = esc(T.install1_pre) + " <code style=\"" + codeStyleY + "\">" + esc(T.exe_name) + "</code> " + esc(T.install1_post);
+  byId("inst2").innerHTML = esc(T.install2_pre) + " <code style=\"" + codeStyleY + "\">" + esc(T.exe_name) + "</code> " + esc(T.install2_post);
+  byId("updtext").innerHTML = esc(T.update_pre) + " <code style=\"" + codeStyleW + "\">" + esc(T.update_key) + "</code> " + esc(T.update_post);
 
+  /* 3) 常見問題 */
+  var faqWrap = byId("faqWrap");
+  faqs.forEach(function(f){
+    var card = document.createElement("div");
+    card.setAttribute("style", "background:#FFFFFF; border:2px solid #191919; padding:14px 18px;");
+    card.innerHTML =
+      "<div style='display:flex; gap:8px; margin-bottom:7px;'>" +
+        "<span style='background:#FFD94A; border:1.5px solid #191919; font-family:\"Space Grotesk\",monospace; font-size:11px; font-weight:700; width:20px; height:20px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;'>Q</span>" +
+        "<span style='font-size:13px; font-weight:700; line-height:1.5;'>" + esc(f.q) + "</span>" +
+      "</div>" +
+      "<div style='display:flex; gap:8px;'>" +
+        "<span style='border:1.5px solid #C9C4B8; color:#8A857C; font-family:\"Space Grotesk\",monospace; font-size:11px; font-weight:700; width:20px; height:20px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;'>A</span>" +
+        "<span style='font-size:12.5px; color:#57534A; line-height:1.65;'>" + esc(f.a) + "</span>" +
+      "</div>";
+    faqWrap.appendChild(card);
+  });
 
-<!-- ════════════════ 07 回報問題或提出構想 ════════════════ -->
-<section>
-  <h2><span class="num">07</span>回報問題或提出構想</h2>
+  /* 4) 錯誤訊息表 */
+  var errBody = byId("errBody");
+  errorRows.forEach(function(row, i){
+    var bg = i % 2 ? "#FBFAF4" : "#FFFFFF";
+    var tr = document.createElement("tr");
+    tr.setAttribute("style", "background:" + bg + ";");
+    tr.innerHTML =
+      "<td style='padding:10px 16px; border-bottom:1px solid #E7E2D4; font-weight:700; vertical-align:top; line-height:1.55;'>" + esc(row[0]) + "</td>" +
+      "<td style='padding:10px 16px; border-bottom:1px solid #E7E2D4; color:#44403A; vertical-align:top; line-height:1.55;'>" + esc(row[1]) + "</td>";
+    errBody.appendChild(tr);
+  });
 
-  <div class="support-grid">
-    <div class="support-card">
-      <h3>👤 作者資訊</h3>
-      <div class="info-row">
-        <span class="label wide">Name</span>
-        <span class="value">蘇宗彥</span>
-      </div>
-      <div class="info-row">
-        <span class="label wide">站所</span>
-        <span class="value">ACS 台北站</span>
-      </div>
-      <div class="info-row">
-        <span class="label wide">Email</span>
-        <span class="value mono">suchongyan@gmail.com</span>
-      </div>
-    </div>
-
-    <div class="support-card">
-      <h3>🐞 回報問題請附上</h3>
-      <div class="info-row">
-        <span class="label">①</span>
-        <span class="value">問題畫面截圖</span>
-      </div>
-      <div class="info-row">
-        <span class="label">②</span>
-        <span class="value">問題發生的頻率</span>
-      </div>
-      <div class="info-row">
-        <span class="label">③</span>
-        <span class="value">問題發生前的具體操作步驟</span>
-      </div>
-    </div>
-
-    <div class="support-card">
-      <h3>💡 提出改善構想請附上</h3>
-      <div class="info-row">
-        <span class="label">①</span>
-        <span class="value">你的願景及成品檔案</span>
-      </div>
-      <div class="info-row">
-        <span class="label">②</span>
-        <span class="value">人工操作時的具體步驟</span>
-      </div>
-      <div class="info-row">
-        <span class="label">③</span>
-        <span class="value">這通常占用你多少時間</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-
-<div class="footer">
-  © 蘇宗彥 - ACS 台北站
-</div>
-
+  /* 5) 影片顯示 / 隱藏 */
+  if (!T.SHOW_VIDEOS) {
+    document.querySelectorAll("[data-video]").forEach(function(el){ el.style.display = "none"; });
+  }
+})();
+</script>
 </body>
 </html>
