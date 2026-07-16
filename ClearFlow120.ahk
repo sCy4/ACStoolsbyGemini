@@ -781,12 +781,12 @@ GroupAdd("Browsers", "ahk_exe msedge.exe")
 ; ★ 統一退出清理:停止游標 Timer + 還原游標 + 釋放 GDI Brush
 OnExit(CleanupOnExit)
 CleanupOnExit(*) {
-    global hAccentBrush
+    global hPanelBrush
     SetTimer(CursorLockKeepAlive, 0)
     RestoreCursor()
-    if (hAccentBrush) {
-        try DllCall("gdi32\DeleteObject", "Ptr", hAccentBrush)
-        hAccentBrush := 0
+    if (hPanelBrush) {
+        try DllCall("gdi32\DeleteObject", "Ptr", hPanelBrush)
+        hPanelBrush := 0
     }
 }
 
