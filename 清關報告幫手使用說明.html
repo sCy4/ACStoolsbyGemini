@@ -104,9 +104,7 @@
       </div>
       <div data-video style="margin-top:14px;">
         <div data-t="video_label" style="font-size:12px; font-weight:700; color:#6E6A63; margin-bottom:6px;"></div>
-        <div style="border:2px solid #191919; background:#000; max-height:360px; overflow:hidden;">
-          <video controls playsinline preload="metadata" src="查詢單筆-操作錄影.mp4" style="width:100%; height:auto; max-height:356px; display:block; object-fit:contain;"></video>
-        </div>
+        <div id="vid1" style="position:relative; width:100%; padding-top:56.25%; border:2px solid #191919; background:#000;"></div>
       </div>
     </div>
 
@@ -128,9 +126,7 @@
       </div>
       <div data-video style="margin-top:14px;">
         <div data-t="video_label" style="font-size:12px; font-weight:700; color:#6E6A63; margin-bottom:6px;"></div>
-        <div style="border:2px solid #191919; background:#000; max-height:360px; overflow:hidden;">
-          <video controls playsinline preload="metadata" src="更新申報狀態-操作錄影.mp4" style="width:100%; height:auto; max-height:356px; display:block; object-fit:contain;"></video>
-        </div>
+        <div id="vid2" style="position:relative; width:100%; padding-top:56.25%; border:2px solid #191919; background:#000;"></div>
       </div>
     </div>
 
@@ -153,9 +149,7 @@
       </div>
       <div data-video style="margin-top:14px;">
         <div data-t="video_label" style="font-size:12px; font-weight:700; color:#6E6A63; margin-bottom:6px;"></div>
-        <div style="border:2px solid #191919; background:#000; max-height:360px; overflow:hidden;">
-          <video controls playsinline preload="metadata" src="標記YN與分配人員-操作錄影.mp4" style="width:100%; height:auto; max-height:356px; display:block; object-fit:contain;"></video>
-        </div>
+        <div id="vid3" style="position:relative; width:100%; padding-top:56.25%; border:2px solid #191919; background:#000;"></div>
       </div>
     </div>
 
@@ -179,9 +173,7 @@
       </ol>
       <div data-video style="margin-top:14px;">
         <div data-t="video_label4" style="font-size:12px; font-weight:700; color:#6E6A63; margin-bottom:6px;"></div>
-        <div style="border:2px solid #191919; background:#000; max-height:360px; overflow:hidden;">
-          <video controls playsinline preload="metadata" src="標記重複資料-操作錄影.mp4" style="width:100%; height:auto; max-height:356px; display:block; object-fit:contain;"></video>
-        </div>
+        <div id="vid4" style="position:relative; width:100%; padding-top:56.25%; border:2px solid #191919; background:#000;"></div>
       </div>
     </div>
   </section>
@@ -249,8 +241,17 @@
    ══════════════════════════════════════════════════════════════ */
 const T = {
 
-  /* ── 影片：要不要顯示操作影片區塊（true 顯示 / false 隱藏）── */
+  /* ── 影片設定 ──────────────────────────
+     SHOW_VIDEOS：要不要顯示操作影片區塊（true 顯示 / false 隱藏）
+     vid_fnN：各功能的 YouTube 影片 ID（不是整段網址，只要 ID）
+              例：網址 https://www.youtube.com/watch?v=dQw4w9WgXcQ → 填 "dQw4w9WgXcQ"
+              短網址 https://youtu.be/dQw4w9WgXcQ 也是取最後那段
+              留空 "" 該支影片就不會顯示 */
   SHOW_VIDEOS: true,
+  vid_fn1: "k5DvdX2edgg",   // 查詢單筆
+  vid_fn2: "oPPLRZP-A6g",   // 更新申報狀態
+  vid_fn3: "yjWHYr5Z9ns",   // 標記 Y/N 與分配人員
+  vid_fn4: "f1QHeqgk8kY",   // 標記重複資料
 
   /* ── 封面 ────────────────────────────── */
   cover_badge:    "使用說明",
@@ -433,10 +434,22 @@ const errorRows = [
     errBody.appendChild(tr);
   });
 
-  /* 5) 影片顯示 / 隱藏 */
-  if (!T.SHOW_VIDEOS) {
-    document.querySelectorAll("[data-video]").forEach(function(el){ el.style.display = "none"; });
+  /* 5) 影片：把 YouTube 影片 ID 變成嵌入播放器（載入時串流，不需先下載完） */
+  function mountVideo(boxId, ytId){
+    var box = byId(boxId);
+    if (!box) return;
+    var wrap = box.parentElement;              // 外層含標題的 data-video 區塊
+    if (!T.SHOW_VIDEOS || !ytId) { if (wrap) wrap.style.display = "none"; return; }
+    var url = "https://www.youtube-nocookie.com/embed/" + encodeURIComponent(ytId);
+    box.innerHTML =
+      "<iframe src='" + url + "' title='操作影片' loading='lazy' " +
+      "allow='accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture' allowfullscreen " +
+      "style='position:absolute; top:0; left:0; width:100%; height:100%; border:0;'></iframe>";
   }
+  mountVideo("vid1", T.vid_fn1);
+  mountVideo("vid2", T.vid_fn2);
+  mountVideo("vid3", T.vid_fn3);
+  mountVideo("vid4", T.vid_fn4);
 })();
 </script>
 </body>
