@@ -70,7 +70,7 @@
       </div>
       <div style="background:#FFFFFF; border:2px solid #191919; padding:16px 8px; display:flex; flex-direction:column; align-items:center; gap:10px; text-align:center;">
         <span data-t="op4_key" style="font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600; background:#FFF7DB; border:2px solid #191919; border-bottom-width:5px; padding:6px 12px; min-width:44px;"></span>
-        <div data-t="op4_desc" style="font-size:12.5px; font-weight:700; line-height:1.4;"></div>
+        <div id="op4desc" style="font-size:12.5px; font-weight:700; line-height:1.4;"></div>
       </div>
       <div style="background:#FFFFFF; border:2px solid #191919; padding:16px 8px; display:flex; flex-direction:column; align-items:center; gap:10px; text-align:center;">
         <span data-t="op5_key" style="font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600; background:#FFF7DB; border:2px solid #191919; border-bottom-width:5px; padding:6px 12px; min-width:44px;"></span>
@@ -284,8 +284,8 @@ const T = {
   /* ── 02 基本操作（5 個按鍵）───────────── */
   op1_key: "🖱 左鍵雙擊", op1_desc: "雙擊程式以啟動",
   op2_key: "🖱 右鍵長按", op2_desc: "叫出功能選單", op2_sub: "長按 0.3 秒",
-  op3_key: "Esc",         op3_desc: "暫停 / 恢復運作",
-  op4_key: "F8",          op4_desc: "關閉程式",
+  op3_key: "Esc",         op3_desc: "暫停 / 恢復運作",  
+  op4_key: "F8",          op4_desc: "重啟程式", op4_sub: "出錯時手動重啟", 
   op5_key: "F9",          op5_desc: "檢查並更新程式",
 
   /* ── 03 四種功能：步驟共用文字 ─────────── */
@@ -387,6 +387,9 @@ const errorRows = [
 
   byId("op2desc").innerHTML =
     esc(T.op2_desc) + "<br><span style='font-weight:400; color:#8A857C; font-size:11px;'>" + esc(T.op2_sub) + "</span>";
+
+  byId("op4desc").innerHTML =
+    esc(T.op4_desc) + "<br><span style='font-weight:400; color:#8A857C; font-size:11px;'>" + esc(T.op4_sub) + "</span>";
 
   function pickStep(name){
     return esc(T.menu_pick_pre) + "<b>" + esc(name) + "</b>" + esc(T.menu_pick_post);
